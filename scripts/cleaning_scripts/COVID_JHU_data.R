@@ -81,7 +81,7 @@ refresh_jhu <- function() {
   output <- read_files %>% map_df(bind_rows)
   
   #Save out
-  saveRDS(output, "data/all_us_jhu.rds")
+  saveRDS(output, "data/COVID/all_us_jhu.rds")
 }
 
 
@@ -95,7 +95,7 @@ refresh_jhu <- function() {
 # LOAD DATA ---------------------------------------------------------------
 
 
-jhu <- readRDS("data/all_us_jhu.rds")
+jhu <- readRDS("data/COVID/all_us_jhu.rds")
 
 #QC - 
 count(jhu, country_region) # confirmed all US
@@ -269,7 +269,7 @@ names(output_county) <- c("state", "report_date", "county", "confirmed_cases", "
 
 # OUTPUT ------------------------------------------------------------------
 
-saveRDS(output_state, "data/state_us_jhu_clean.rds")
-saveRDS(output_county, "data/county_us_jhu_clean.rds")
+saveRDS(output_state, "data/COVID/state_us_jhu_clean.rds")
+saveRDS(output_county, "data/COVID/county_us_jhu_clean.rds")
   
 
