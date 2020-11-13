@@ -48,7 +48,7 @@ pop_cols <- c("REGION", "DIVISION", "STATE", "COUNTY", "STNAME", "CTYNAME", "POP
 # A. State level population data
 pop_state_sub <- pop %>% 
   filter(SUMLEV == "040") %>% 
-  .[, pop_cols[!pop_cols %in% c("CTYNAME")]]
+  .[, pop_cols[!pop_cols %in% c("CTYNAME", "COUNTY")]]
 
 # B. County level population data
 pop_county_sub <- pop %>% 
@@ -97,7 +97,7 @@ age_state_sub <- demo %>%
 # B. County level
 age_county_sub <- demo %>% 
   filter(YEAR %in% c(5,9,12) & AGEGRP != 0 ) %>% 
-  group_by(COUNTY, CTYNAME,YEAR, AGEGRP) %>% 
+  group_by(STATE, STNAME, COUNTY, CTYNAME,YEAR, AGEGRP) %>% 
   summarize(
     TOT_POP = sum(TOT_POP),
     TOT_MALE = sum(TOT_MALE),
@@ -158,6 +158,9 @@ age_county_sub <- age_county_sub %>%
     )
   )
 
+# Lower case all names
+outputs <- map(list(pop_county_sub, pop_state_sub, demo_county_sub, demo_state_sub, age_county_sub, age_state_sub),
+    function(x) setNames(x, tolower(names(x))))
 
 
 
@@ -165,15 +168,15 @@ age_county_sub <- age_county_sub %>%
 
 
 # Population
-saveRDS(pop_county_sub, "~/Documents/2020-election-predictions/data/demographics/county_populations.rds")
-saveRDS(pop_state_sub, "~/Documents/2020-election-predictions/data/demographics/state_populations.rds")
+saveRDS(outputs[[1]], "~/Documents/2020-election-predictions/data/demographics/county_populations.rds")
+saveRDS(outputs[[2]], "~/Documents/2020-election-predictions/data/demographics/state_populations.rds")
 
 # Race/gender
-saveRDS(demo_county_sub, "~/Documents/2020-election-predictions/data/demographics/county_race_gender.rds")
-saveRDS(demo_state_sub, "~/Documents/2020-election-predictions/data/demographics/state_race_gender.rds")
+saveRDS(outputs[[3]], "~/Documents/2020-election-predictions/data/demographics/county_race_gender.rds")
+saveRDS(outputs[[4]], "~/Documents/2020-election-predictions/data/demographics/state_race_gender.rds")
 
 # Age
-saveRDS(age_county_sub, "~/Documents/2020-election-predictions/data/demographics/county_age.rds")
-saveRDS(age_state_sub, "~/Documents/2020-election-predictions/data/demographics/state_age.rds")
+saveRDS(outputs[[5]], "~/Documents/2020-election-predictions/data/demographics/county_age.rds")
+saveRDS(outputs[[6]], "~/Documents/2020-election-predictions/data/demographics/state_age.rds")
 
 
