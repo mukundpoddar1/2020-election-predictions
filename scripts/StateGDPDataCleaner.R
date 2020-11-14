@@ -20,4 +20,4 @@ state_gdp$raw_2020=apply(state_gdp %>% select(c('X2018.Q1','X2018.Q2','X2018.Q3'
 state_gdp$raw_2016=apply(state_gdp %>% select(c('X2014.Q1','X2014.Q2','X2014.Q3','X2014.Q4','X2015.Q1','X2015.Q2','X2015.Q3','X2015.Q4', 'X2016.Q1', 'X2016.Q2')),1,weighted.mean,weights)
 state_gdp=left_join(gdp_changes,state_gdp,by='Geography') %>% select(c('Geography','raw_2016','raw_2020','change_2016','change_2020'))
 
-write.csv(state_gdp, file='../data/Clean Data/state_gdp.csv')
+write.csv(state_gdp, file='../data/Clean Data/state_gdp.csv', sep=",", row.names=FALSE)

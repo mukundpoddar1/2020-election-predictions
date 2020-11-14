@@ -23,4 +23,4 @@ finance_json=fromJSON("https://api.open.fec.gov/v1/presidential/contributions/by
 rep_finances=data.frame(state=sapply(finance_json$results, function(index) index$contribution_state),
                         rep_amount=sapply(finance_json$results, function(index) index$contribution_receipt_amount))
 total_finances= rbind(total_finances, left_join(dem_finances, rep_finances) %>% mutate(year=2016))
-saveRDS(total_finances, file='../data/CampaignFinances.rds')
+write.csv(total_finances, file='../data/Clean Data/CampaignFinances.csv', sep=",", row.names=FALSE)
