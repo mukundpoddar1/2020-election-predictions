@@ -27,4 +27,4 @@ cw <- cw %>%
 
 # OUTPUT ------------------------------------------------------------------
 
-saveRDS(cw, "~/Documents/2020-election-predictions/data/county_to_116th_congress.rds")
+write_csv(cw, "../../data/county_to_116th_congress.csv")

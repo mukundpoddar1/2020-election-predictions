@@ -168,15 +168,15 @@ outputs <- map(list(pop_county_sub, pop_state_sub, demo_county_sub, demo_state_s
 
 
 # Population
-saveRDS(outputs[[1]], "~/Documents/2020-election-predictions/data/demographics/county_populations.rds")
-saveRDS(outputs[[2]], "~/Documents/2020-election-predictions/data/demographics/state_populations.rds")
+write_csv(outputs[[1]], "../../data/demographics/county_populations.csv")
+write_csv(outputs[[2]], "../../data/demographics/state_populations.csv")
 
 # Race/gender
-saveRDS(outputs[[3]], "~/Documents/2020-election-predictions/data/demographics/county_race_gender.rds")
-saveRDS(outputs[[4]], "~/Documents/2020-election-predictions/data/demographics/state_race_gender.rds")
+write_csv(outputs[[3]], "../../data/demographics/county_race_gender.csv")
+write_csv(outputs[[4]], "../../data/demographics/state_race_gender.csv")
 
 # Age
-saveRDS(outputs[[5]], "~/Documents/2020-election-predictions/data/demographics/county_age.rds")
-saveRDS(outputs[[6]], "~/Documents/2020-election-predictions/data/demographics/state_age.rds")
+write_csv(outputs[[5]], "../../data/demographics/county_age.csv")
+write_csv(outputs[[6]], "../../data/demographics/state_age.csv")
 
 
