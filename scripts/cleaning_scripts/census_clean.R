@@ -166,6 +166,9 @@ outputs <- map(list(pop_county_sub, pop_state_sub, demo_county_sub, demo_state_s
 
 # OUTPUT ------------------------------------------------------------------
 
+# Ouput a base file of just state and county FIPS information
+base <- outputs[[1]] %>% distinct(state, stname, county, ctyname)
+write_csv(base, "../../data/base_county_state_fips_lkp.csv")
 
 # Population
 write_csv(outputs[[1]], "../../data/demographics/county_populations.csv")
