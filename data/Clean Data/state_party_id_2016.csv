@@ -1,23 +1,10 @@
-Area,Rep,Dem,Ind,DK
-United States,29,33,34,4
-Northeast,26,38,33,4
-New England (CT ME MA NH RI VT),19,34,44,2
-Middle Atlantic (DE DC MD NJ NY PA),27,40,30,4
-Great Lakes-East North (IN IL MI OH WI),29,34,34,4
-Midwest-West North (IA KS MN MO NE ND SD),32,27,39,3
-Midwest,30,31,36,3
-South,32,32,32,4
-South Atlantic (FL GA NC SC VA WV),31,32,33,5
-South Central (AL AR KY LA MS OK TN TX),34,31,31,4
-West,28,34,34,4
-Mountain (AZ CO ID NM MT UT NV WY),32,29,36,3
-Pacific (AK CA HI OR WA),26,36,33,5
+state,Rep,Dem,Ind,DK
 CT,19,34,44,2
 ME,19,34,44,2
 MA,19,34,44,2
 NH,19,34,44,2
 RI,19,34,44,2
-VT,27,40,30,4
+VT,19,34,44,2
 DE,27,40,30,4
 DC,27,40,30,4
 MD,27,40,30,4
