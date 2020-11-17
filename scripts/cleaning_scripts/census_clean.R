@@ -230,6 +230,10 @@ outputs <- map(outputs,
 base <- outputs[[1]] %>% distinct(state, stname, county, ctyname)
 write_csv(base, "../../data/Clean Data/base_county_state_fips_lkp.csv")
 
+# remove the ctyname and stname fields 
+outputs <- map(outputs,
+               function(x) select(x, -stname, -ctyname))
+
 ## New outputs are only at county level
 write_csv(outputs[[1]], "../../data/Clean Data/demographics/county_populations.csv")
 write_csv(outputs[[4]], "../../data/Clean Data/demographics/county_race_gender.csv")
