@@ -1,0 +1,225 @@
+,,,,,(VOL.),,,,,
+,,,,,Other/,,Rep/,Dem/,No,Unweighted
+,,Rep,Dem,Ind,DK,,Lean Rep,Lean Dem,leaning,N
+,,%,%,%,%,,%,%,%,
+ALL REGISTERED VOTERS,,29,33,34,4,,44,48,8,8113
+GENDER,Men,32,26,38,4,,51,41,8,4337
+,Women,27,40,30,4,,38,54,8,3776
+RACE/ETHNICITY,"White, non-Hispanic",36,26,35,3,,54,39,7,5895
+,"Black, non-Hispanic",3,70,23,4,,7,87,6,782
+,Hispanic,16,47,32,5,,27,63,10,810
+,"Asian, non-Hispanic (English-speaking, only)",18,44,32,6,,27,66,7,164
+GENERATION,Millennial (ages 18-35 in 2016),22,34,41,3,,36,57,7,1595
+,Generation X (36-51),27,33,36,4,,42,48,9,1864
+,Baby-Boomer (52-70),32,34,30,4,,49,45,6,3313
+,Silent (71-88),40,32,23,5,,53,40,7,1176
+DETAILED GENERATION,Younger Millennial (18-25),22,33,43,2,,36,58,6,613
+,Older Millennial (26-35),22,35,39,4,,36,56,8,982
+,Younger Gen Xer (36-43),24,34,37,4,,38,51,11,809
+,Older Gen Xer (44-51),30,32,35,3,,46,46,8,1055
+,Younger Boomer (52-60),32,33,32,3,,48,46,6,1602
+,Older Boomer (61-70),33,34,28,4,,49,44,7,1711
+,Younger Silent (71-80),39,33,24,4,,53,41,7,928
+,Older Silent (81-88),43,31,19,8,,53,39,8,248
+EDUCATION,College grad+,27,36,33,3,,41,53,6,3956
+,   Postgrad,23,43,31,3,,35,60,5,1289
+,  College grad,29,33,34,3,,44,50,6,2667
+,Some college or less,30,32,34,4,,46,46,9,4117
+,   Some college,30,30,36,4,,46,45,9,2258
+,   High school or less,31,34,31,4,,45,46,8,1859
+FAMILY INCOME,"$75,000+",33,31,34,3,,49,45,6,3341
+,"$30,000-$74,999",31,31,34,3,,48,45,7,2584
+,"<$30,000",20,43,34,3,,32,60,8,1464
+DETAILED FAMILY INCOME,"$150,000+",33,32,32,3,,46,48,6,1069
+,"$100,000 to $149,999",34,30,33,3,,51,45,4,1188
+,"$75,000 to $99,999",31,30,35,4,,48,44,8,1084
+,"$50,000 to $74,999",32,30,35,4,,49,44,6,1275
+,"$40,000 to $49,999",31,31,35,3,,47,46,7,638
+,"$30,000 to $39,999",31,33,33,3,,47,46,7,671
+,"<$30,000",20,43,34,3,,32,60,8,1464
+MARITAL STATUS,Married,35,32,30,4,,51,44,6,939
+,Unmarried,20,39,38,3,,36,56,8,698
+GENERATION BY GENDER,Millennial men,26,26,45,4,,43,49,8,965
+, Millennial women,18,43,36,2,,28,66,6,630
+,Gen Xer men,28,27,41,4,,48,43,9,1031
+,Gen Xer women,26,39,31,3,,37,53,10,833
+,Boomer men,37,27,33,3,,56,38,6,1747
+,Boomer women,28,40,28,4,,41,52,7,1566
+,Silent men,44,25,26,5,,60,34,6,537
+,Silent women,37,38,20,5,,48,45,7,639
+EDUCATION BY GENDER 2-WAY,College grad+ men,30,27,40,3,,49,45,7,2142
+,College grad+ women,25,45,28,3,,34,61,5,1814
+,Some coll or less men,33,26,37,4,,52,40,8,2177
+,Some coll or less women,28,38,31,4,,40,51,9,1940
+EDUCATION BY GENDER 4-WAY,Postgrad men,28,31,38,3,,45,49,6,668
+,Postgrad women,20,52,26,2,,27,69,4,621
+,College men,31,25,40,3,,50,43,7,1474
+, College women,27,41,29,3,,38,56,6,1193
+,Some college men,33,22,40,5,,53,37,10,1153
+,Some college women,27,38,32,4,,40,52,7,1105
+,HS or less men,33,29,34,4,,51,42,7,1024
+,HS or less women,29,38,29,4,,40,50,10,835
+REGION,Northeast,26,38,33,4,,39,54,7,1396
+,  New England (CT ME MA NH RI VT),19,34,44,2,,35,58,8,372
+,  Middle Atlantic (DE DC MD NJ NY PA),27,40,30,4,,39,54,7,1241
+,Great Lakes-East North (IN IL MI OH WI),29,34,34,4,,45,48,8,1194
+,  Midwest-West North (IA KS MN MO NE ND SD),32,27,39,3,,51,40,9,573
+,  Midwest,30,31,36,3,,47,45,8,1767
+,South,32,32,32,4,,48,45,8,3145
+,  South Atlantic (FL GA NC SC VA WV),31,32,33,5,,48,45,8,1582
+,  South Central (AL AR KY LA MS OK TN TX),34,31,31,4,,50,42,8,1345
+,West,28,34,34,4,,40,52,8,1805
+,  Mountain (AZ CO ID NM MT UT NV WY),32,29,36,3,,45,48,7,637
+,  Pacific (AK CA HI OR WA),26,36,33,5,,37,54,9,1168
+COMMUNITY TYPE,Urban,21,43,33,4,,33,60,7,2728
+,Suburban,32,30,34,3,,48,44,7,3778
+,Rural,38,25,33,3,,55,37,8,1390
+RELIGIOUS TRADITION,White Non-Hisp Evangelical Protestant,56,14,27,3,,76,20,4,1673
+,White Non-Hisp Mainline Protestant,38,25,34,3,,55,37,8,1230
+,Black Protestant,3,73,20,4,,6,88,6,571
+,Total Catholic,31,34,30,4,,47,46,7,1632
+,  White Non-Hispanic Catholic,38,26,32,3,,58,37,6,1151
+,  Hispanic Catholic,16,56,23,5,,23,69,9,363
+,Mormon,48,13,35,4,,69,24,7,142
+,Jewish,14,53,32,1,,24,74,2,188
+,Total Unaffiliated,12,39,45,3,,25,66,9,1681
+,  Atheist,11,45,40,4,,17,74,9,294
+,  Agnostic,8,40,50,1,,21,72,7,352
+,  Nothing in particular,14,37,45,4,,29,62,9,1035
+RELIGIOUS TRADITION BY GENERATION,White NH evangelical Prot Millennial,57,13,27,3,,78,20,3,198
+,White NH evangelical Prot Xer,57,9,32,2,,79,16,4,324
+,White NH evangelical Prot Boomer,56,15,27,3,,78,19,3,765
+,White NH evangelical Prot Silent,56,19,21,5,,70,24,6,348
+,White NH mainline Prot Millennial,37,21,40,3,,55,34,12,173
+,White NH mainline Prot Xer,36,26,36,2,,53,38,9,234
+,White NH mainline Prot Boomer,37,26,35,2,,56,39,6,545
+,White NH mainline Prot Silent,45,30,22,3,,57,37,6,251
+,Total Catholic Millennial,28,37,32,3,,42,53,5,246
+,Total Catholic Xer,28,35,34,3,,43,48,10,367
+,Total Catholic Boomer,33,33,30,4,,50,44,6,724
+,Total Catholic Silent,37,31,25,7,,55,37,8,267
+,White NH Catholic Millennial,40,23,35,2,,60,36,3,130
+,White NH Catholic Xer,35,29,33,3,,54,39,7,245
+,White NH Catholic Boomer,38,26,34,2,,57,37,6,540
+,White NH Catholic Silent,42,26,26,6,,62,32,6,217
+,Total Unaffiliated Millennial,9,38,51,2,,22,72,6,566
+,Total Unaffiliated Xer,13,36,45,5,,28,61,11,424
+,Total Unaffiliated Boomer,15,44,38,3,,27,63,10,563
+,Total Unaffiliated Silent,15,47,36,2,,23,69,7,104
+,,,,,,,,,,
+AMONG WHITE NON-HISPANIC REGISTERED VOTERS,,,,,,,,,,
+ALL WHITE NON-HISPANIC VOTERS,,36,26,35,3,,54,39,7,5895
+GENDER,Men,39,19,38,3,,61,32,7,3168
+,Women,34,32,31,3,,47,46,7,2727
+GENERATION,Millennial (ages 18-35 in 2016),30,25,43,2,,47,47,5,966
+,Generation X (36-51),35,25,37,3,,53,38,9,1251
+,Baby-Boomer (52-70),38,26,33,3,,57,37,6,2571
+,Silent (71-88),44,27,24,4,,59,35,6,998
+DETAILED GENERATION,Younger Millennial (18-25),30,24,45,1,,49,49,3,344
+,Older Millennial (26-35),29,26,41,3,,46,46,7,622
+,Younger Gen Xer (36-43),32,27,38,4,,49,40,10,519
+,Older Gen Xer (44-51),37,24,36,3,,56,37,7,732
+,Younger Boomer (52-60),38,25,35,2,,58,36,6,1189
+,Older Boomer (61-70),39,27,31,3,,56,38,6,1382
+,Younger Silent (71-80),45,26,26,3,,60,34,5,778
+,Older Silent (81-88),43,30,19,8,,54,38,8,220
+EDUCATION,College grad+,32,32,34,3,,47,48,5,3069
+,  Postgrad,28,39,32,2,,42,55,3,997
+,  College grad,34,29,34,3,,50,45,5,2072
+,Some college or less,39,22,36,3,,58,34,8,2811
+,   Some college,37,22,38,3,,57,36,8,1610
+,   High school or less,41,22,33,3,,59,33,8,1201
+FAMILY INCOME,"$75,000+",37,26,34,3,,55,40,5,2634
+,"$30,000-$74,999",39,23,35,2,,58,36,6,1894
+,"<$30,000",29,30,38,2,,45,47,8,867
+DETAILED FAMILY INCOME,"$150,000+",38,29,32,2,,52,43,4,860
+,"$100,000 to $149,999",38,25,34,3,,57,39,4,933
+,"$75,000 to $99,999",36,26,35,3,,54,38,8,841
+,"$50,000 to $74,999",38,24,35,3,,58,37,6,973
+,"$40,000 to $49,999",38,23,37,2,,57,36,7,465
+,"$30,000 to $39,999",42,21,34,2,,60,35,5,456
+,"<$30,000",29,30,38,2,,45,47,8,867
+MARITAL STATUS,Married,39,26,32,4,,56,38,6,686
+,Unmarried,26,31,40,3,,47,46,7,424
+GENERATION BY GENDER,Millennial men,33,18,46,3,,54,39,7,598
+, Millennial women,26,33,40,,,40,57,4,368
+,Gen Xer men,36,19,42,3,,59,33,7,700
+,Gen Xer women,34,31,32,4,,47,43,10,551
+,Boomer men,42,19,36,3,,65,29,6,1368
+,Boomer women,34,32,30,3,,49,44,7,1203
+,Silent men,48,20,28,5,,66,29,5,460
+,Silent women,42,33,22,4,,54,40,6,538
+EDUCATION BY GENDER 2-WAY,College grad+ men,34,24,39,3,,54,40,5,1681
+,College grad+ women,30,40,29,2,,41,55,4,1388
+,Some coll or less men,42,16,38,3,,65,28,7,1480
+,Some coll or less women,36,28,33,3,,51,40,8,1331
+EDUCATION BY GENDER 4-WAY,Postgrad men,32,27,38,3,,52,44,4,524
+,Postgrad women,24,49,26,1,,33,64,3,473
+,College men,35,22,40,3,,55,39,6,1157
+, College women,33,35,30,3,,45,50,5,915
+,Some college men,41,14,41,4,,64,28,8,818
+,Some college women,34,29,34,3,,50,42,8,792
+,HS or less men,43,18,35,3,,66,28,7,662
+,HS or less women,39,27,31,3,,52,38,9,539
+REGION,Northeast,32,31,34,3,,47,47,6,1056
+,  New England (CT ME MA NH RI VT),22,31,46,2,,38,55,7,311
+,  Middle Atlantic (DE DC MD NJ NY PA),35,32,31,3,,51,45,5,880
+,Midwest,34,26,36,3,,53,40,8,1453
+,  Great Lakes-East North (IN IL MI OH WI),34,27,35,4,,52,41,7,954
+,  Midwest-West North (IA KS MN MO NE ND SD),35,24,39,2,,55,37,8,499
+,South,42,21,33,3,,62,32,6,2127
+,  South Atlantic (FL GA NC SC VA WV),40,21,35,3,,62,31,6,1078
+,  South Central (AL AR KY LA MS OK TN TX),46,20,31,3,,64,29,6,914
+,West,33,28,36,3,,47,45,7,1259
+,  Mountain (AZ CO ID NM MT UT NV WY),37,23,38,2,,51,41,7,485
+,  Pacific (AK CA HI OR WA),31,31,34,4,,45,48,7,774
+COMMUNITY TYPE,Urban,29,33,36,3,,45,49,6,1713
+,Suburban,38,24,35,3,,56,37,7,2898
+,Rural,43,21,33,3,,61,32,7,1164
+RELIGIOUS TRADITION,White Non-Hisp Evangelical Protestant,56,14,27,3,,76,20,4,1673
+,White Non-Hisp Mainline Protestant,38,25,34,3,,55,37,8,1230
+,White Non-Hispanic Catholic,38,26,32,3,,58,37,6,1151
+,Mormon,52,11,36,1,,71,22,7,120
+,Jewish,13,53,33,1,,22,75,2,178
+,White non-Hisp Total Unaffiliated,14,38,46,3,,27,65,8,1240
+,  Atheist,11,46,40,3,,16,77,6,232
+,  Agnostic,8,43,48,1,,19,73,8,279
+,  Nothing in particular,16,33,47,3,,33,57,9,729
+,,,,,,,,,,
+AMONG BLACK NON-HISPANIC REGISTERED VOTERS,,,,,,,,,,
+ALL BLACK NON-HISPANIC VOTERS,,3,70,23,4,,7,87,6,782
+GENDER,Men,4,63,28,4,,6,85,8,379
+,Women,2,75,18,4,,7,89,4,403
+GENERATION,Millennial (ages 18-35 in 2016),3,58,33,6,,9,84,7,183
+,Generation X (36-51),3,70,25,2,,6,88,6,227
+,Baby-Boomer (52-70),3,77,15,4,,6,89,5,300
+EDUCATION,College grad+,2,69,26,2,,6,89,5,283
+,  Postgrad,3,76,19,2,,5,91,4,103
+,  College grad,2,66,30,2,,6,88,6,180
+,Some college or less,3,70,22,5,,7,87,6,498
+,   Some college,3,66,25,5,,9,85,6,241
+,   High school or less,3,73,19,5,,5,88,7,257
+FAMILY INCOME,"$75,000+",3,66,26,4,,6,86,8,221
+,"$30,000-$74,999",2,70,23,5,,8,88,5,236
+,"<$30,000",4,72,21,2,,7,88,5,268
+RELIGIOUS TRADITION,Black non-Hisp Protestant,3,73,20,4,,6,88,6,571
+,Black non-Hisp Total Unaffiliated,4,65,28,3,,10,87,4,100
+,,,,,,,,,,
+AMONG HISPANIC REGISTERED VOTERS,,,,,,,,,,
+ALL HISPANIC VOTERS,,16,47,32,5,,27,63,10,810
+GENDER,Men,17,40,38,6,,32,57,10,427
+,Women,15,53,28,5,,21,68,10,383
+GENERATION,Millennial (ages 18-35 in 2016),14,44,38,4,,24,66,10,288
+,Generation X (36-51),13,45,38,4,,25,61,14,209
+,Baby-Boomer (52-70),20,54,19,7,,30,64,6,229
+EDUCATION,College grad+,16,48,31,4,,26,66,8,278
+,Some college or less,16,47,33,5,,27,63,11,526
+,   Some college,20,43,34,4,,30,59,11,231
+,   High school or less,13,49,32,7,,24,65,11,295
+FAMILY INCOME,"$75,000+",26,38,32,3,,41,54,6,243
+,"$30,000-$74,999",14,48,33,5,,25,64,10,262
+,"<$30,000",10,55,32,3,,18,74,9,226
+NATIVE/FOREIGN BORN,Native born,18,46,33,3,,30,62,8,549
+,Foreign born,11,50,30,9,,20,66,14,246
+RELIGIOUS TRADITION,Hispanic Catholic,16,56,23,5,,23,69,9,363
+,Hispanic Total Unaffiliated,7,39,50,4,,24,62,14,166
