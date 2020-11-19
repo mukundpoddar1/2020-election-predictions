@@ -5,6 +5,10 @@ An attempt to predict the 2020 US Presidential Elections
 ## Data Sources:  
 
 **Election Returns:**  
+1. _election_returns_2012_2016.csv_, _senate_election_returns_2016.csv_, and _senate_election_returns_2018.csv_: Election results by county from the 2012 and 2016 Presidential Elections. 
+
+Source: MIT Electin Data + Science Lab. Harvard Dataverse https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VOQCHQ
+https://dataverse.harvard.edu/dataverse/medsl_senate
 
 **Voting Registration:**  
 
