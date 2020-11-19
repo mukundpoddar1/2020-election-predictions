@@ -85,10 +85,10 @@ count(dfs3, is.na(state.y))
 
 count(dfs3, is.na(county.y))
 
-# both 1
+# both 2
 
 dfs3 %>% filter(is.na(state.y)) # New Mexico, Do - this is Dona Ana county
-# state: 35, county: 013
+# state: 35, county: 013, and DC
 dfs3$state.y[is.na(dfs3$state.y)] <- "35"
 dfs3$county.y[is.na(dfs3$county.y)] <- "013"
 
