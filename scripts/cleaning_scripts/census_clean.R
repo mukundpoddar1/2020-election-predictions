@@ -32,6 +32,7 @@ pop <- read_csv("https://www2.census.gov/programs-surveys/popest/datasets/2010-2
 
 demo <- read_csv("https://www2.census.gov/programs-surveys/popest/datasets/2010-2019/counties/asrh/cc-est2019-alldata.csv")
 
+state_codes <- read_csv("../../data/Source Data/state_codes.csv")
 
 # Interpret net migration rates: (from https://www.census.gov/programs-surveys/popest/about/glossary.html)
 # The difference between the number of migrants entering and those leaving a country in a year, per 1,000 midyear population. May also be expressed in percent. A positive figure is known as a net immigration rate and a negative figure as a net emigration rate.
@@ -189,12 +190,12 @@ age_county <- map2(.x = list(5, 9, 12), .y = list(2012, 2016, 2019), .f = ~age_c
 
 # 2. Get the age categories to have the years as well
 age_county <- map2(.x = age_county, .y = list(2012,2016,2019),
-                  .f = ~.x %>% 
-                    gather(cat ,value, paste0(c("TOT_POP_", "TOT_MALE_", "TOT_FEMALE_"), .y)) %>% 
-                    unite(cat2, paste0("AGEGRP_", .y), cat, remove = T) %>%
-                    spread(cat2, value) %>%
-                    setNames(str_replace_all(names(.), " ", "_"))
-                  )
+                   .f = ~.x %>% 
+                     gather(cat ,value, paste0(c("TOT_POP_", "TOT_MALE_", "TOT_FEMALE_"), .y)) %>% 
+                     unite(cat2, paste0("AGEGRP_", .y), cat, remove = T) %>%
+                     spread(cat2, value) %>%
+                     setNames(str_replace_all(names(.), " ", "_"))
+)
 
 
 # 3. Reset first four column names
@@ -220,7 +221,7 @@ outputs <- list(
 
 # Lower case all names
 outputs <- map(outputs,
-    function(x) setNames(x, tolower(names(x))))
+               function(x) setNames(x, tolower(names(x))))
 
 
 
@@ -228,6 +229,7 @@ outputs <- map(outputs,
 
 # Ouput a base file of just state and county FIPS information
 base <- outputs[[1]] %>% distinct(state, stname, county, ctyname)
+base <- left_join(base, state_codes, by=c("stname"="state"))
 write_csv(base, "../../data/Clean Data/base_county_state_fips_lkp.csv")
 
 # remove the ctyname and stname fields 
