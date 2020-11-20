@@ -35,16 +35,13 @@ df_polls_state <- df_polls_state[!(df_polls_state$state == 0),]
 
 # Reading in main dataset
 df_merge <- read_csv("data/Clean Data/merged_final_dataset.csv")
-View(df_merge)
 
 # Adding county state key for later merging
 df_merge <- df_merge %>%
-    mutate(counties_merge = paste(df_merge$ctyname.x, df_merge$stname.x, sep = ",")) 
+    mutate(counties_merge = paste(df_merge$ctyname.x, df_merge$stname.x, sep = ", ")) 
     
 # Merging
 df_merged <- merge(df_merge, df_polls_state, by.x = 'stname.x', by.y = 'state', all.x = TRUE )
-
-
 
 # Writing the file to overwrite main dataset
 write.csv(df_merged, "data/Clean Data/final_pres_2016_dataset.csv", row.names = FALSE)
