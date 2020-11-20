@@ -40,5 +40,9 @@ party
 #combine state column with party id distribution
 cleaned_df <- data.frame(state=states, party)
 
+#merge into base_county_state_fips file
+base_county_state_fips <- read_csv("../../data/Clean Data/base_county_state_fips_lkp.csv")
+final_df <- base_county_state_fips %>% left_join(cleaned_df, by=c("abbreviation"="state") ) 
+
 #output
-write_csv(cleaned_df, "../../data/Clean Data/demographics/state_party_id_2016.csv")
+write_csv(cleaned_df, "../../data/Clean Data/demographics/state_party_id_2016.csv",row.names = FALSE)
