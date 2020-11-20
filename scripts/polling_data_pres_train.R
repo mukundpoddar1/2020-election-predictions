@@ -43,5 +43,12 @@ df_merge <- df_merge %>%
 # Merging
 df_merged <- merge(df_merge, df_polls_state, by.x = 'stname.x', by.y = 'state', all.x = TRUE )
 
+# Dropping congress districts
+df_merged <- df_merged %>%
+    select(-c(congress_district.x, congress_district.y))
+
+# Dropping duplicate rows
+df_merged <- df_merged %>% distinct()
+
 # Writing the file to overwrite main dataset
 write.csv(df_merged, "data/Clean Data/final_pres_2016_dataset.csv", row.names = FALSE)
