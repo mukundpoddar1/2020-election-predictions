@@ -5,10 +5,10 @@ An attempt to predict the 2020 US Presidential Elections
 ## Data Sources:  
 
 **Election Returns:**  
-1. _election_returns_2012_2016.csv_, _senate_election_returns_2016.csv_, and _senate_election_returns_2018.csv_: Election results by county from the 2012 and 2016 Presidential Elections. 
+1. _usa-2016-presidential-election-by-county.csv_, Election Results and Demographic/Environmental data by county from the 2012 and 2016 Presidential Elections. 
 
-Source: MIT Electin Data + Science Lab. Harvard Dataverse https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VOQCHQ
-https://dataverse.harvard.edu/dataverse/medsl_senate
+Source: https://public.opendatasoft.com/explore/dataset/usa-2016-presidential-election-by-county/table/?disjunctive.state
+
 
 **Voting Registration:**  
 
@@ -72,5 +72,11 @@ tot_pop | Total population
 tot_male | Total male population 
 tot_female | Total female population
 
+**Polling Data** 
+1. _president_general_polls_2016.csv_, polling data from 2016 polls. Contains raw and adjusted polling data. 
+2. _president_polls2020.csv_, polling data from 2020 polls. Contains only raw polling data.
+
+Source: 538's website: (2020) https://projects.fivethirtyeight.com/polls/ , 
+(2016) https://projects.fivethirtyeight.com/2016-election-forecast/national-polls/
 
 **COVID-19:**
