@@ -44,4 +44,4 @@ df_merge <- df_merge %>%
 df_merged <- merge(df_merge, df_polls_state, by.x = 'stname.x', by.y = 'state', all.x = TRUE )
 
 # Writing the file to overwrite main dataset
-write.csv(df_merged, "data/Clean Data/merged_final_dataset.csv", row.names = FALSE)
+write.csv(df_merged, "data/Clean Data/final_pres_2016_dataset.csv", row.names = FALSE)
