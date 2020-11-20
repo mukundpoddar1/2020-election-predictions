@@ -229,7 +229,16 @@ outputs <- map(outputs,
 
 # Ouput a base file of just state and county FIPS information
 base <- outputs[[1]] %>% distinct(state, stname, county, ctyname)
+## EDITS 11/20:
+# Concatenate fips into one field
+base$fips <- paste0(base$state, base$county)
+# Drop Alaska
+base <- base %>% 
+  mutate(
+    fips = ifelse(stname == "Alaska", "02001", fips)
+  )
 base <- left_join(base, state_codes, by=c("stname"="state"))
+
 write_csv(base, "../../data/Clean Data/base_county_state_fips_lkp.csv")
 
 # remove the ctyname and stname fields 
