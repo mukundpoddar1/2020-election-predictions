@@ -50,5 +50,12 @@ df_merged <- df_merged %>%
 # Dropping duplicate rows
 df_merged <- df_merged %>% distinct()
 
+# Reading in the election data
+df_election <- read_csv2("data/Source Data/usa-2016-presidential-election-by-county.csv")
+
+df_merged_final <- merge(df_merged, df_election, by.x = "counties_merge", by.y = "County", all.x = TRUE)
+
+View(df_merged_final)
+
 # Writing the file to overwrite main dataset
-write.csv(df_merged, "data/Clean Data/final_pres_2016_dataset.csv", row.names = FALSE)
+#write.csv(df_merged, "data/Clean Data/final_pres_2016_dataset.csv", row.names = FALSE)
