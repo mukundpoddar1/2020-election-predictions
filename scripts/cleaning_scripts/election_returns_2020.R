@@ -89,8 +89,11 @@ count(dfs3, is.na(county.y))
 
 dfs3 %>% filter(is.na(state.y)) # New Mexico, Do - this is Dona Ana county
 # state: 35, county: 013, and DC
-dfs3$state.y[is.na(dfs3$state.y)] <- "35"
-dfs3$county.y[is.na(dfs3$county.y)] <- "013"
+dfs3$state.y[is.na(dfs3$state.y) & dfs3$state == "New Mexico"] <- "35"
+dfs3$county.y[is.na(dfs3$county.y) & dfs3$state == "New Mexico"] <- "013"
+
+dfs3$state.y[is.na(dfs3$state.y) & dfs3$state == "Washington DC"] <- "11"
+dfs3$county.y[is.na(dfs3$county.y) & dfs3$state == "Washington DC"] <- "001"
 
 dfs3 <- dfs3 %>% 
   select(state.y, county.y, biden, trump, other) %>% 
@@ -99,15 +102,14 @@ dfs3 <- dfs3 %>%
     county = county.y
   )
 
-# Manually append D.C and Alaska
-# DC fips: 11001
+# Manually append Alaska
 # Alaska state level FIPS: 02001
 manual <- data.frame(
-  state = c("11", "02"),
-  county = c("001", "001"),
-  biden = c(.93,0.43),
-  trump = c(0.055, 0.531),
-  other = c(0.016, 0.039),
+  state = c("02"),
+  county = c("000"),
+  biden = c(0.43),
+  trump = c(0.531),
+  other = c(0.039),
   stringsAsFactors = F
 )
 
@@ -117,6 +119,8 @@ dfs3 <- dfs3 %>%
 # Concatenate state and fips into fips column
 dfs3 <- dfs3 %>% 
   unite(state, county, col = "fips", sep = "")
+
+# Missing 15005 (Hawaii, Kalawao county), smallest county! doesn't seem to have any returns
 
 
 # OUTPUT  -----------------------------------------------------------------
