@@ -235,6 +235,13 @@ final_dem_2019 <- final_dem_2019 %>%
 
 
 
+# Merge fips codes
+final_dem_2016 <- final_dem_2016 %>% 
+  unite(state, county, col = "fips", sep = "")
+
+final_dem_2019 <- final_dem_2019 %>% 
+  unite(state, county, col = "fips", sep = "")
+
 
 # OUTPUT ------------------------------------------------------------------
 
