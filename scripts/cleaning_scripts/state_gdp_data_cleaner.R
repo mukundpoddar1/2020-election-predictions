@@ -3,6 +3,7 @@
 # This script combines the state GDP values (% changes and raw values) for the 
 # election years by taking a weighted average of the previous quarters, 
 # assigning more weights to more recent quarters.
+# It then divides the state GDP into counties taking populations into account appropriately
 # Author: Mukund Poddar
 #########################
 
@@ -26,6 +27,22 @@ raw_gdp=rbind(state_gdp_2016,state_gdp_2020)[,c('Geography','year','raw_gdp')]
 
 state_gdp=left_join(gdp_changes,raw_gdp,by=c('Geography','year'))
 
-write.csv(state_gdp, file='../../data/Clean Data/state_gdp.csv', sep=",", row.names=FALSE)
+# Currently our data is at the state level but we need it to be at the county level
+# So we now divide the raw GDP value among the counties weighted by populations,
+# and replicate % change across the counties
 
-#join state_gdp with the county names by state name. Then make a column that multiplies the number with pop/total pop
+fips_codes = read.csv('../../data/Clean Data/base_county_state_fips_lkp.csv') %>% select('stname', 'fips')
+county_pop = read.csv('../../data/Clean Data/census_clean_2016.csv') %>% select('fips','popestimate2016') %>% 
+                  setNames(c('fips','population')) %>% mutate(year=rep(2016,nrow(.)))
+county_pop = rbind(county_pop, read.csv('../../data/Clean Data/census_clean_2019.csv') %>% select('fips','popestimate2019') %>% 
+                     setNames(c('fips','population')) %>% mutate(year=rep(2020,nrow(.))))
+county_gdp = left_join(state_gdp, fips_codes, by=c('Geography'='stname'))
+county_gdp = left_join(county_gdp, county_pop, by = c('fips','year'))
+
+county_gdp = county_gdp %>% group_by(Geography) %>% mutate(raw_gdp=raw_gdp*population/sum(population)) %>% ungroup()
+
+write.csv(county_gdp %>% filter(year==2016) %>% select(fips,raw_gdp,gdp_change), 
+          file='../../data/Clean Data/county_gdp_2016.csv', sep=",", row.names=FALSE)
+write.csv(county_gdp %>% filter(year==2020) %>% select(fips,raw_gdp,gdp_change), 
+          file='../../data/Clean Data/county_gdp_2020.csv', sep=",", row.names=FALSE)
+
