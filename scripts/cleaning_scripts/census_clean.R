@@ -47,14 +47,15 @@ base$fips <- paste0(base$STATE, base$COUNTY)
 
 names(base) <- tolower(names(base))
 
-# Drop Alaska
-base <- base %>% 
-  mutate(
-    fips = ifelse(stname == "Alaska", "02001", fips)
-  )
-base <- left_join(base, state_codes, by=c("stname"="state"))
+# remove all states except for Alaska
+base_final <- base %>% 
+  filter(county != "000" & state != "02")
 
-# write_csv(base, "../../data/Clean Data/base_county_state_fips_lkp.csv")
+# Add back in Alaska
+base_final <- base_final %>% 
+  bind_rows(base %>% filter(fips == "02000")) %>% arrange(fips)
+
+
 
 
 # Field names from pop: 
@@ -206,6 +207,19 @@ list_2019 <- list_2019 %>% map(function(x) setNames(x, tolower(names(x))))
 final_dem_2019 <- list_2019 %>% 
   reduce(full_join, by = c("state", "county"))
 
+# Roll-up Alaska
+final_dem_2016 <- final_dem_2016 %>% 
+  filter(state != "02") %>% 
+  bind_rows(
+    final_dem_2016 %>% filter(state == "02") %>% mutate(county = "000") %>% group_by(state, county) %>% summarize_all(sum)
+  )
+
+final_dem_2019 <- final_dem_2019 %>% 
+  filter(state != "02") %>% 
+  bind_rows(
+    final_dem_2019 %>% filter(state == "02") %>% mutate(county = "000") %>% group_by(state, county) %>% summarize_all(sum)
+  )
+
 # Normalize variables
 # divide all variables that have female in them by tot_female and same for male
 final_dem_2016 <- final_dem_2016 %>% 
@@ -243,8 +257,10 @@ final_dem_2019 <- final_dem_2019 %>%
   unite(state, county, col = "fips", sep = "")
 
 
-# OUTPUT ------------------------------------------------------------------
 
+
+# OUTPUT ------------------------------------------------------------------
+write_csv(base_final, "../../data/Clean Data/base_county_state_fips_lkp.csv")
 write_csv(final_dem_2016, "../../data/Clean Data/census_clean_2016.csv")
 write_csv(final_dem_2019, "../../data/Clean Data/census_clean_2019.csv")
 

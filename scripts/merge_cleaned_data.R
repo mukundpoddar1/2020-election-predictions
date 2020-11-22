@@ -20,36 +20,86 @@ library(ggplot2)
 # 1. List all file names in the clean data folder
 data_files <- list.files("../data/Clean Data/", recursive = T, full.names = T)
 
-# 2. Read in all of these csvs to one list
-read_in_files <- map(data_files, read_csv)
+# Keep only csvs
+data_files <- data_files[str_detect(data_files, "\\.csv")]
 
-# Look at the names 
-# read_in_files %>% map(names)
+# Determine 2016 and 2020 data files
+files_2016 <- c("../data/Clean Data//base_county_state_fips_lkp.csv", "../data/Clean Data//census_clean_2016.csv", "../data/Clean Data//consumer_spending_2015.csv", "../data/Clean Data//saul_cleaned/clean_election_results_2016.csv", "../data/Clean Data//saul_cleaned/clean_polls_2016.csv")
 
-# This function checks if state and county vars are in the data frame and they are the key variables, return TRUE
+files_2020 <- c("../data/Clean Data//base_county_state_fips_lkp.csv", "../data/Clean Data//census_clean_2019.csv", "../data/Clean Data//saul_cleaned/clean_polls_2020.csv", "../data/Clean Data//election_returns_2020.csv" )
+
+
+read_2016 <- files_2016 %>% 
+  setNames(nm = basename(.)) %>% 
+  map(read_csv)
+
+read_2020 <- files_2020 %>% 
+  setNames(nm = basename(.)) %>% 
+  map(read_csv)
+
+
+# read_files <- data_files %>% 
+#   setNames(nm = basename(.)) %>% 
+#   map(read_csv)
+
+# Check names of files
+# read_files %>% map(names)
+
+#lowercase all names
+read_2016 <- read_2016 %>% 
+  map(function(x) setNames(x, tolower(names(x))))
+
+read_2020 <- read_2020 %>% 
+  map(function(x) setNames(x, tolower(names(x))))
+
+# read_files <- read_files %>% 
+#   map(function(x) setNames(x, tolower(names(x))))
+
+# Keep only files that have FIPS codes
 test_key_vars <- function(df) {
-  if("state"%in% names(df) & "county" %in% names(df)) {
-    if(sum(str_detect(df$state, "[0-9]{2}")) > 0 & sum(str_detect(df$county, "[0-9]{3}"))) {
-      return(TRUE)
-    }
-    return(FALSE)
+  if("fips" %in% tolower(names(df))) {
+    return(TRUE)
   }
   return(FALSE)
 }
 
-#3. Which datasets need to be modified? Print out data files that need to be re-keyed
-read_in_files %>% 
-  map(function(x) {if(test_key_vars(x) == FALSE) print(x)})
+# Convert fips that are numeric
+convert_fips <- function(df){
+  tmp <- df
+  if("fips" %in% names(df)) {
+    tmp <- tmp %>% 
+      mutate(fips = paste0("0", fips),
+             fips = str_sub(fips, -5)
+      )
+  }
+  return(tmp)
+}
 
-# 4. Keep the ready keyed datasets and remove the rest.
-read_ready_merge <- read_in_files %>% 
-  map(function(x) {if(test_key_vars(x) == TRUE) return(x)}) %>% compact() # compact() removes NULL list values
+read_files_fips_2016 <- read_2016 %>% 
+  map(function(x) {if(test_key_vars(x) == TRUE) return(x)}) %>% compact()
 
-# 5. Full join all files together. recduce completes this.
-final <- read_ready_merge %>% 
-  reduce(full_join, by = c("state", "county"))
+read_files_fips_2020 <- read_2020 %>% 
+  map(function(x) {if(test_key_vars(x) == TRUE) return(x)}) %>% compact()
 
+read_files_fips_2016 <- read_files_fips_2016 %>% map(convert_fips)
+read_files_fips_2020 <- read_files_fips_2020 %>% map(convert_fips)
+
+merged_final_2016 <- read_files_fips_2016 %>% 
+  reduce(full_join, by = "fips")
+
+merged_final_2020 <- read_files_fips_2020 %>% 
+  reduce(full_join, by = "fips")
+
+# read_files_fips <- read_files %>% 
+#   map(function(x) {if(test_key_vars(x) == TRUE) return(x)}) %>% compact() # compact() removes NULL list values
+# 
+# read_files_fips <- read_files_fips %>% 
+#   map(convert_fips)
+# 
+# final <- read_files_fips %>% 
+#   reduce(full_join, by = c("fips"))
 
 # OUTPUT ------------------------------------------------------------------
-# Output the file
-write_csv(final, "../data/Clean Data/merged_final_dataset.csv")
+
+write_csv(merged_final_2016, "../data/merged_final_2016.csv")
+write_csv(merged_final_2020, "../data/merged_final_2020.csv")
