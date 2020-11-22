@@ -99,6 +99,26 @@ dfs3 <- dfs3 %>%
     county = county.y
   )
 
+# Manually append D.C and Alaska
+# DC fips: 11001
+# Alaska state level FIPS: 02001
+manual <- data.frame(
+  state = c("11", "02"),
+  county = c("001", "001"),
+  biden = c(.93,0.43),
+  trump = c(0.055, 0.531),
+  other = c(0.016, 0.039),
+  stringsAsFactors = F
+)
+
+dfs3 <- dfs3 %>% 
+  bind_rows(manual)
+
+# Concatenate state and fips into fips column
+dfs3 <- dfs3 %>% 
+  unite(state, county, col = "fips", sep = "")
+
+
 # OUTPUT  -----------------------------------------------------------------
 
-write_csv(dfs3 %>% arrange(state, county), "../../data/Clean Data/election_returns_2020.csv")
+write_csv(dfs3 %>% arrange(fips), "../../data/Clean Data/election_returns_2020.csv")
