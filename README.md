@@ -7,7 +7,11 @@ An attempt to predict the 2020 US Presidential Elections
 **Election Returns:**  
 1. _usa-2016-presidential-election-by-county.csv_, Election Results and Demographic/Environmental data by county from the 2012 and 2016 Presidential Elections. 
 
-Source: https://public.opendatasoft.com/explore/dataset/usa-2016-presidential-election-by-county/table/?disjunctive.state
+Source: https://public.opendatasoft.com/explore/dataset/usa-2016-presidential-election-by-county/table/?disjunctive.state. 
+
+2. _election_returns_2020.csv_: Election results from the 2020 election scraped from NPR the week of 11/15-11/21. 
+
+Source: https://apps.npr.org/elections20-interactive/
 
 
 **Voting Registration:**  
