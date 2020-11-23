@@ -24,9 +24,22 @@ data_files <- list.files("../data/Clean Data/", recursive = T, full.names = T)
 data_files <- data_files[str_detect(data_files, "\\.csv")]
 
 # Determine 2016 and 2020 data files
-files_2016 <- c("../data/Clean Data//base_county_state_fips_lkp.csv", "../data/Clean Data//census_clean_2016.csv", "../data/Clean Data//consumer_spending_2015.csv", "../data/Clean Data//saul_cleaned/clean_election_results_2016.csv", "../data/Clean Data//saul_cleaned/clean_polls_2016.csv")
+files_2016 <- c("../data/Clean Data//base_county_state_fips_lkp.csv",
+                "../data/Clean Data//campaign_raised_2016.csv", 
+                "../data/Clean Data//census_clean_2016.csv", 
+                "../data/Clean Data//consumer_spending_2015.csv", 
+                "../data/Clean Data//county_gdp_2016.csv", 
+                "../data/Clean Data//unemployment_2016.csv" , 
+                "../data/Clean Data//saul_cleaned/clean_polls_2016.csv", 
+                "../data/Clean Data//saul_cleaned/clean_election_results_2016.csv")
 
-files_2020 <- c("../data/Clean Data//base_county_state_fips_lkp.csv", "../data/Clean Data//census_clean_2019.csv", "../data/Clean Data//saul_cleaned/clean_polls_2020.csv", "../data/Clean Data//election_returns_2020.csv" )
+files_2020 <- c("../data/Clean Data//base_county_state_fips_lkp.csv", 
+                "../data/Clean Data//campaign_raised_2020.csv" ,
+                "../data/Clean Data//census_clean_2019.csv", 
+                "../data/Clean Data//county_gdp_2020.csv" ,
+                "../data/Clean Data//unemployment_2020.csv" ,
+                "../data/Clean Data//saul_cleaned/clean_polls_2020.csv", 
+                "../data/Clean Data//election_returns_2020.csv" )
 
 
 read_2016 <- files_2016 %>% 
