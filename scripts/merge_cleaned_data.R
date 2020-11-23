@@ -50,6 +50,22 @@ read_2020 <- files_2020 %>%
   setNames(nm = basename(.)) %>% 
   map(read_csv)
 
+# Re-key state polling files 
+chk <- full_join(read_2016[[7]] %>% mutate(state_poll = 1),
+read_2016[[1]] %>% mutate(base = 1),
+by = c("state"="stname"))
+count(chk, state_poll, base)
+ # drops out Maine/Nebraska congressional polls
+
+chk <- full_join(read_2020[[6]] %>% mutate(state_poll = 1),
+                 read_2020[[1]] %>% mutate(base = 1),
+                 by = c("state"="stname"))
+count(chk, state_poll, base)
+
+# drops out Maine/Nebraska congressional polls
+
+read_2016[[7]] <- read_2016[[1]] %>% select(fips, stname) %>% inner_join(read_2016[[7]], by = c("stname" = "state")) %>% select(-stname)
+read_2020[[6]] <- read_2020[[1]] %>% select(fips, stname) %>% inner_join(read_2020[[6]], by = c("stname" = "state")) %>% select(-stname)
 
 # read_files <- data_files %>% 
 #   setNames(nm = basename(.)) %>% 
