@@ -11,6 +11,7 @@ library(shiny)
 library(tidyverse)
 library(forcats)
 library(dslabs)
+library(corrplot)
 
 #subset data to just United States
 dataset <- read.csv("merged_final_dataset.csv")
@@ -49,7 +50,35 @@ ui <- fluidPage(
                 column(9,
                        plotOutput("scatterPlot")
                 ), # end of column 1
-            ) #end of fluidRow
+            ), #end of fluidRow
+            
+            fluidRow(
+                # 1st column: input up to 10 predictors
+                column(7,
+                       selectizeInput(inputId = "corr", label = "Select up to 10 variables for correlation plot",
+                                      choices = variable_choices,options=list(maxItems=10),
+                       selected = "age_0_to_19_years_tot_female_2012.y")
+                ), # end of first column
+            ), # end of fluidRow
+            
+            fluidRow(
+                column(9,
+                       plotOutput("Corr_matrix")
+                ),
+            ),
+            fluidRow(
+                # another column, select variable to see distribution
+                column(3,
+                       selectInput(inputId = "hist_selection", label = "Choose a variable:",
+                                   choices = variable_choices,
+                                   selected = "age_0_to_19_years_tot_female_2012.y")
+                ) #end of column
+            ), # end of fluidRow 
+            fluidRow(
+                column(9,
+                       plotOutput("hist")
+                )
+            )
 ) #end of fluidPage
 
 server <- function(input, output) {
@@ -59,6 +88,16 @@ server <- function(input, output) {
         ggplot(dataset, aes_string(x = input$variable_1, y = input$variable_2)) +
             geom_point(aes(colour = stname.x))
     }) # end of renderPlot
+    
+    output$Corr_matrix <- renderPlot({
+        corrplot(cor(select(dataset,contains(input$corr)),
+                     use = "pairwise.complete.obs"),method="number")
+    })
+    
+    output$hist <-renderPlot({
+        ggplot(dataset, aes_string(input$hist_selection))+geom_histogram()+
+            theme(axis.text.x = element_text(angle = 90, hjust = 1))
+    })
 }
 
 # Run the application 
