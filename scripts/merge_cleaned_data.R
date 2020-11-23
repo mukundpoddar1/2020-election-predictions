@@ -27,7 +27,7 @@ data_files <- data_files[str_detect(data_files, "\\.csv")]
 files_2016 <- c("../data/Clean Data//base_county_state_fips_lkp.csv",
                 "../data/Clean Data//campaign_raised_2016.csv", 
                 "../data/Clean Data//census_clean_2016.csv", 
-                "../data/Clean Data//consumer_spending_2015.csv", 
+                "../data/Clean Data//consumer_spending_2016.csv", 
                 "../data/Clean Data//county_gdp_2016.csv", 
                 "../data/Clean Data//unemployment_2016.csv" , 
                 "../data/Clean Data//saul_cleaned/clean_polls_2016.csv", 
@@ -36,6 +36,7 @@ files_2016 <- c("../data/Clean Data//base_county_state_fips_lkp.csv",
 files_2020 <- c("../data/Clean Data//base_county_state_fips_lkp.csv", 
                 "../data/Clean Data//campaign_raised_2020.csv" ,
                 "../data/Clean Data//census_clean_2019.csv", 
+                "../data/Clean Data//consumer_spending_2018.csv",
                 "../data/Clean Data//county_gdp_2020.csv" ,
                 "../data/Clean Data//unemployment_2020.csv" ,
                 "../data/Clean Data//saul_cleaned/clean_polls_2020.csv", 
@@ -57,7 +58,7 @@ by = c("state"="stname"))
 count(chk, state_poll, base)
  # drops out Maine/Nebraska congressional polls
 
-chk <- full_join(read_2020[[6]] %>% mutate(state_poll = 1),
+chk <- full_join(read_2020[[7]] %>% mutate(state_poll = 1),
                  read_2020[[1]] %>% mutate(base = 1),
                  by = c("state"="stname"))
 count(chk, state_poll, base)
@@ -65,7 +66,7 @@ count(chk, state_poll, base)
 # drops out Maine/Nebraska congressional polls
 
 read_2016[[7]] <- read_2016[[1]] %>% select(fips, stname) %>% inner_join(read_2016[[7]], by = c("stname" = "state")) %>% select(-stname)
-read_2020[[6]] <- read_2020[[1]] %>% select(fips, stname) %>% inner_join(read_2020[[6]], by = c("stname" = "state")) %>% select(-stname)
+read_2020[[7]] <- read_2020[[1]] %>% select(fips, stname) %>% inner_join(read_2020[[7]], by = c("stname" = "state")) %>% select(-stname)
 
 # read_files <- data_files %>% 
 #   setNames(nm = basename(.)) %>% 
