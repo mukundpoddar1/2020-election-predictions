@@ -15,6 +15,10 @@ library(tidyverse)
 library(ggplot2)
 
 
+# LOAD DATA ---------------------------------------------------------------
+
+# Load in 2016 election returns to create consistency metrics
+elections_2016 <- read_csv("../../data/Clean Data/saul_cleaned/clean_election_results_2016.csv")
 
 # FUNCTION ----------------------------------------------------------------
 
@@ -122,7 +126,29 @@ dfs3 <- dfs3 %>%
 
 # Missing 15005 (Hawaii, Kalawao county), smallest county! doesn't seem to have any returns
 
+# Rename fields to match 2016 data
+dfs3 <- dfs3 %>% 
+  select(-other)
+
+names(dfs3) <- c("Fips", "Democrats.2020", "Republicans.2020")
+
+# add on 2016 data to create consistentcy
+dfs3 <- dfs3 %>% 
+  left_join(elections_2016 %>% 
+              select(Fips, Republicans.2016, Democrats.2016) %>% 
+              mutate(
+                Fips = str_sub(paste0("0",Fips), -5)
+              ), by = c( "Fips")
+            )
+
+# Create consistency metric
+dfs3 <- dfs3 %>% 
+  mutate(
+    consistency_dem = Democrats.2020/Democrats.2016,
+    consistency_rep = Republicans.2020/Republicans.2016
+  ) %>% 
+  select(Fips, consistency_dem, consistency_rep, Democrats.2020, Republicans.2020)
 
 # OUTPUT  -----------------------------------------------------------------
 
-write_csv(dfs3 %>% arrange(fips), "../../data/Clean Data/election_returns_2020.csv")
+write_csv(dfs3 %>% arrange(Fips), "../../data/Clean Data/election_returns_2020.csv")
