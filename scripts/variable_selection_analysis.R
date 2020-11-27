@@ -107,7 +107,7 @@ model_results <- model_results %>%
 # Democrats mult county pop -----------------------------------------------
 
 # Get list of covariates
-covs <- names(elections_2020)[!names(elections_2020) %in% c("fips", "democrats.2020", "republicans.2020", "dems_over_50pct")]
+covs <- names(elections_2020)[!names(elections_2020) %in% c("fips", "democrats.2020", "republicans.2020", "dems_over_50pct", "popestimate2019")]
 
 cov_statement <- paste0(covs, collapse = " + ")
 
@@ -154,9 +154,9 @@ covs <- names(elections_2020)[!names(elections_2020) %in% c("fips", "democrats.2
 
 cov_statement <- paste0(covs, collapse = " + ")
 
-# Plot outcome
+# Plot outcome - normality of observations
 elections_2020 %>% 
-  ggplot(aes(x = dems_county_pop)) +
+  ggplot(aes(x = log(dems_county_pop))) +
   geom_histogram()+
   theme_bw()
 
@@ -174,7 +174,7 @@ abline(h = 0, col = "cornflowerblue", lwd = 2)
 
 # Residuals don't look fully scattered 
 
-AIC(full.mod) # 8541.24 - 8 times higher than logistic model
+AIC(full.mod) # 8292.731 - 8 times higher than logistic model
 
 model_results <- model_results %>% 
   bind_rows(
@@ -187,13 +187,61 @@ model_results <- model_results %>%
     )
   )
 
+
+# Republicans mult county pop (log) -----------------------------------------------
+
+# Get list of covariates
+covs <- names(elections_2020)[!names(elections_2020) %in% c("fips", "democrats.2020", "republicans.2020", "dems_over_50pct", "dems_county_pop")]
+
+cov_statement <- paste0(covs, collapse = " + ")
+
+# Get republican counts
+elections_2020$reps_county_pop <- elections_2020$republicans.2020*elections_2020$popestimate2019
+
+# Plot outcome - normality of observations
+elections_2020 %>% 
+  ggplot(aes(x = log(reps_county_pop))) +
+  geom_histogram()+
+  theme_bw()
+
+
+# fit a linear model
+full.mod <- lm(eval(parse(text = paste0("log(reps_county_pop) ~", cov_statement))), data = elections_2020)
+summary(full.mod)
+
+# Model evaluation:
+par(mfrow = c(2, 2))
+hist(full.mod$residuals, main = "Histogram of Residuals", xlab = "Residuals") 
+qqnorm(residuals(full.mod), pch = 20, col = "tomato", main = "Unstandardized Residuals") # th qqline(residuals(lm3C)) #NJP Added line
+plot(fitted(full.mod), residuals(full.mod), main = "Plot of Residuals against Fitted Values",xlab = "Fitted Values", ylab = "Residuals") 
+abline(h = 0, col = "cornflowerblue", lwd = 2)
+
+# Residuals don't look fully scattered 
+
+AIC(full.mod) # 7096.327
+
+model_results <- model_results %>% 
+  bind_rows(
+    tibble(
+      model_type = c("linear"),
+      model_selection = c("full model"),
+      outcome = c("log(% reps * county population)"),
+      AIC = c(AIC(full.mod)),
+      BIC = c(BIC(full.mod))
+    )
+  )
+
+
+
+
 # Model Selection results
-# A tibble: 5 x 5
+# A tibble: 6 x 5
 # model_type model_selection     outcome                            AIC    BIC
 # <chr>      <chr>               <chr>                            <dbl>  <dbl>
-# 1 logistic   full model          dems over 50%                    1131.  1337.
-# 2 logistic   backwards selection dems over 50%                    1118.  1263.
-# 3 logistic   elastic net         dems over 50%                    1166.  1353.
-# 4 linear     full model          % dems * county population      72112. 72324.
-# 5 linear     full model          log(% dems * county population)  8423.  8634.
+# 1 logistic   full model          dems over 50%                    1123.  1329.
+# 2 logistic   backwards selection dems over 50%                    1110.  1261.
+# 3 logistic   elastic net         dems over 50%                    1161.  1348.
+# 4 linear     full model          % dems * county population      72871. 73077.
+# 5 linear     full model          log(% dems * county population)  8293.  8504.
+# 6 linear     full model          log(% reps * county population)  7096.  7308.
 
