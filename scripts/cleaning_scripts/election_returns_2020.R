@@ -76,6 +76,15 @@ dfs2 <- dfs2 %>% map_df(bind_rows) %>% select(state, COUNTY, BIDEN, TRUMP, OTHER
 
 names(dfs2) <- tolower(names(dfs2))
 
+# Need to flip Wyoming
+wyoming <- dfs2 %>% filter(state == "Wyoming")
+names(wyoming) <- c("state", "county", "trump", "biden", "other")
+
+dfs2 <- dfs2 %>% 
+  filter(state != "Wyoming") %>% 
+  bind_rows(wyoming) %>% 
+  arrange(state)
+
 # Add on keys
 keys <- read_csv("../../data/Clean Data/base_county_state_fips_lkp.csv")
 
@@ -148,6 +157,9 @@ dfs3 <- dfs3 %>%
     consistency_rep = Republicans.2020/Republicans.2016
   ) %>% 
   select(Fips, consistency_dem, consistency_rep, Democrats.2020, Republicans.2020)
+
+
+
 
 # OUTPUT  -----------------------------------------------------------------
 
