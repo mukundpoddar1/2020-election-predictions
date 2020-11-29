@@ -68,6 +68,12 @@ count(chk, state_poll, base)
 read_2016[[7]] <- read_2016[[1]] %>% select(fips, stname) %>% inner_join(read_2016[[7]], by = c("stname" = "state")) %>% select(-stname)
 read_2020[[7]] <- read_2020[[1]] %>% select(fips, stname) %>% inner_join(read_2020[[7]], by = c("stname" = "state")) %>% select(-stname)
 
+# # Roll-up elections results 2016
+# read_2016[[8]] %>% 
+#   mutate(
+#     Fips = str_sub(paste0("0", Fips), -5)
+#   ) %>% filter(str_detect(Fips, "^02"))
+
 # read_files <- data_files %>% 
 #   setNames(nm = basename(.)) %>% 
 #   map(read_csv)
@@ -129,20 +135,32 @@ merged_final_2020 <- read_files_fips_2020 %>%
 # final <- read_files_fips %>% 
 #   reduce(full_join, by = c("fips"))
 
-# Force names
-names_2016 <- c("fips" , "dem_amount" , "rep_amount", "popestimate2016", "netmig2016", "tot_male",  "tot_female", "wa_male", "wa_female", "ba_male", "ba_female", "h_male", "h_female", "aac_male" , "aac_female", "age_0_to_19_years_tot_female_agegrp", "age_0_to_19_years_tot_male_agegrp", "age_20_to_39_years_tot_female_agegrp", "age_20_to_39_years_tot_male_agegrp", "age_40_to_59_years_tot_female_agegrp", "age_40_to_59_years_tot_male_agegrp", "age_60_to_79_years_tot_female_agegrp", "age_60_to_79_years_tot_male_agegrp" , "age_80_years_or_older_tot_female_agegrp", "age_80_years_or_older_tot_male_agegrp", "consumer_exp" , "raw_gdp", "gdp_change", "unemployment", "dem_poll_mean", "dem_poll_median", "dem_poll_sd", "rep_poll_mean" , "rep_poll_median" , "rep_poll_sd", "consistency_dem", "consistency_rep", "democrats.2016", "republicans.2016")
+# Standardize outcome names
+merged_final_2016 <- merged_final_2016 %>% 
+  rename(
+    democrats_pct = democrats.2016,
+    republicans_pct = republicans.2016
+  ) 
 
-names_2020 <- c("fips" , "dem_amount" , "rep_amount", "popestimate2019", "netmig2019", "tot_male",  "tot_female", "wa_male", "wa_female", "ba_male", "ba_female", "h_male", "h_female", "aac_male" , "aac_female", "age_0_to_19_years_tot_female_agegrp", "age_0_to_19_years_tot_male_agegrp", "age_20_to_39_years_tot_female_agegrp", "age_20_to_39_years_tot_male_agegrp", "age_40_to_59_years_tot_female_agegrp", "age_40_to_59_years_tot_male_agegrp", "age_60_to_79_years_tot_female_agegrp", "age_60_to_79_years_tot_male_agegrp" , "age_80_years_or_older_tot_female_agegrp", "age_80_years_or_older_tot_male_agegrp", "consumer_exp" , "raw_gdp", "gdp_change", "unemployment", "dem_poll_mean", "dem_poll_median", "dem_poll_sd", "rep_poll_mean" , "rep_poll_median" , "rep_poll_sd", "consistency_dem", "consistency_rep", "democrats.2020", "republicans.2020")
+merged_final_2020 <- merged_final_2020 %>% 
+  rename(
+    democrats_pct = democrats.2020,
+    republicans_pct = republicans.2020
+  )
+
+# Force names
+names_final <- c("fips" , "dem_amount" , "rep_amount", "popestimate", "netmig",  "race_white", "race_black", "race_hispanic", "race_aac",  "age_0_to_19_years",  "age_20_to_39_years",  "age_40_to_59_years", "age_60_to_79_years", "age_80_years_or_older", "financial.services.and.insurance", "gasoline.and.other.energy.goods", "health.care", "other.nondurable.goods", "personal.consumption.expenditures", "food", "household" , "nonprofit", "nondurable_goods", "durable_goods" , "goods_clothing_footwear", "services", "recreation", "transportation", "raw_gdp", "gdp_change", "unemployment", "dem_poll_mean", "dem_poll_median", "dem_poll_sd", "rep_poll_mean" , "rep_poll_median" , "rep_poll_sd", "consistency_dem", "consistency_rep", "democrats_pct", "republicans_pct")
+
 
 # Keeping only records where popestimate 2016 is defined for 2016 
-merged_final_2016 <- merged_final_2016 %>% filter(!is.na(popestimate2016))
+merged_final_2016 <- merged_final_2016 %>% filter(!is.na(popestimate))
 
 
 # Subset names
-merged_final_2016 <- merged_final_2016[, names_2016]
-merged_final_2020 <- merged_final_2020[, names_2020]
+merged_final_2016 <- merged_final_2016[, names_final]
+merged_final_2020 <- merged_final_2020[, names_final]
 
 # OUTPUT ------------------------------------------------------------------
 
-write_csv(merged_final_2016 %>% select(names_2016), "../data/merged_final_2016.csv")
-write_csv(merged_final_2020 %>% select(names_2020), "../data/merged_final_2020.csv")
+write_csv(merged_final_2016, "../data/merged_final_2016.csv")
+write_csv(merged_final_2020, "../data/merged_final_2020.csv")

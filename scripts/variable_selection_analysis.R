@@ -20,6 +20,7 @@ library(glmnet)
 # LOAD DATA ---------------------------------------------------------------
 
 elections_2020 <- read_csv("../data/merged_final_2020.csv")
+elections_2020_og <- elections_2020
 
 # Logistic (dems > 50%) ---------------------------------------------------------------------
 
@@ -232,6 +233,65 @@ model_results <- model_results %>%
   )
 
 
+### MODEL PERCENTAGES------------------------------------------------------------------
+
+# LASSO/ ELASTIC-------------------------------------------------------------------
+# Perform LASSO
+# Following this:
+# https://rstatisticsblog.com/data-science-in-action/machine-learning/lasso-regression/
+
+model_data <- elections_2020_og %>% dplyr::select(-fips, -republicans.2020)
+x_vars <- model.matrix(democrats.2020 ~., model_data)[, -1]
+y_var <- model_data$democrats.2020
+lambda_seq <- 10^seq(2,-2, by = -.1)
+
+set.seed(1)
+train <- sample(1:nrow(x_vars), nrow(x_vars)/2)
+x_test <- (-train)
+y_test <- y_var[x_test]
+
+cv_output <- cv.glmnet(x_vars[train,], y_var[train], alpha = 1, lambda = lambda_seq, nfolds = 5)
+
+best_lam <- cv_output$lambda.min
+
+# Using this value, train lasso model again
+lasso_best <- glmnet(x_vars[train,], y_var[train], alpha = 1, lambda = best_lam)
+pred <- predict(lasso_best, s = best_lam, newx = x_vars[x_test, ])
+
+coef(lasso_best) # removes only wa_male, age_0_to_19_years_tot_female_agegrp
+
+# Elastic net - article says to rerun with alpha = 0.5
+elastic_best <- glmnet(x_vars[train,], y_var[train], alpha = 0.5, lambda = best_lam)
+pred1 <- predict(elastic_best, s = best_lam, newx = x_vars[x_test, ])
+
+coef(elastic_best) # removes only tot_male, wa_male, wa_female, age_0_to_19_years_tot_female_agegrp, age_80_years_or_older_tot_female_agegrp, age_80_years_or_older_tot_male_agegrp, consistency_rep
+
+
+# MODELS
+
+# Full
+covs <- names(elections_2020_og)[!names(elections_2020_og) %in% c("fips", "democrats.2020", "republicans.2020")]
+
+covs <- paste0(covs, collapse = " + ")
+
+mod.lm_full_dems <- lm(eval(paste0("democrats.2020~ ", covs)), data = elections_2020_og)
+summary(mod.lm_full_dems)
+
+# Backwards
+mod.lm_back_dems <- step(mod.lm_full_dems, direction = "backward")
+summary(mod.lm_back_dems)
+
+# Lasso
+
+covs_lasso <- names(elections_2020_og)[!names(elections_2020_og) %in% c("fips", "democrats.2020", "republicans.2020", "wa_male", "age_0_to_19_years_tot_female_agegrp")]
+
+covs_lasso <- paste0(covs_lasso, collapse = " + ")
+
+mod.lm_lasso_dems <- lm(eval(paste0("democrats.2020~ ", covs)), data = elections_2020_og)
+summary(mod.lm_lasso_dems)
+
+
+# Elastic Net
 
 
 # Model Selection results

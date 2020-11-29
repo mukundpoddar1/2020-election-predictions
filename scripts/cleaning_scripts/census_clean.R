@@ -220,34 +220,51 @@ final_dem_2019 <- final_dem_2019 %>%
     final_dem_2019 %>% filter(state == "02") %>% mutate(county = "000") %>% group_by(state, county) %>% summarize_all(sum)
   )
 
-# Normalize variables
-# divide all variables that have female in them by tot_female and same for male
+# Add up males and females
 final_dem_2016 <- final_dem_2016 %>% 
-  mutate_at(names(final_dem_2016)[str_detect(names(final_dem_2016), "_female") & names(final_dem_2016) != "tot_female"], ~./tot_female)
+  mutate(
+    race_white = wa_male + wa_female,
+    race_black = ba_female + ba_male,
+    race_hispanic = h_male + h_female,
+    race_aac = aac_male + aac_female,
+    age_0_to_19_years = age_0_to_19_years_tot_female_agegrp + age_0_to_19_years_tot_male_agegrp,
+    age_20_to_39_years = age_20_to_39_years_tot_female_agegrp + age_20_to_39_years_tot_male_agegrp,
+    age_40_to_59_years = age_40_to_59_years_tot_female_agegrp + age_40_to_59_years_tot_male_agegrp,
+    age_60_to_79_years = age_60_to_79_years_tot_female_agegrp + age_60_to_79_years_tot_male_agegrp,
+    age_80_years_or_older = age_80_years_or_older_tot_female_agegrp + age_80_years_or_older_tot_male_agegrp
+  ) %>% 
+  select(-tot_female, -tot_male, -wa_male, -wa_female, -ba_female, -ba_male, -h_male, -h_female, -aac_male, -aac_female, -age_0_to_19_years_tot_female_agegrp, -age_0_to_19_years_tot_male_agegrp, -age_20_to_39_years_tot_female_agegrp, -age_20_to_39_years_tot_male_agegrp, -age_40_to_59_years_tot_female_agegrp, -age_40_to_59_years_tot_male_agegrp, -age_60_to_79_years_tot_female_agegrp, -age_60_to_79_years_tot_male_agegrp, -age_80_years_or_older_tot_female_agegrp, -age_80_years_or_older_tot_male_agegrp)
 
-# divide all variables that have male in them by tot_male 
-final_dem_2016 <- final_dem_2016 %>% 
-  mutate_at(names(final_dem_2016)[str_detect(names(final_dem_2016), "_male") & names(final_dem_2016) != "tot_male"], ~./tot_male)
+final_dem_2019 <- final_dem_2019 %>% 
+  mutate(
+    race_white = wa_male + wa_female,
+    race_black = ba_female + ba_male,
+    race_hispanic = h_male + h_female,
+    race_aac = aac_male + aac_female,
+    age_0_to_19_years = age_0_to_19_years_tot_female_agegrp + age_0_to_19_years_tot_male_agegrp,
+    age_20_to_39_years = age_20_to_39_years_tot_female_agegrp + age_20_to_39_years_tot_male_agegrp,
+    age_40_to_59_years = age_40_to_59_years_tot_female_agegrp + age_40_to_59_years_tot_male_agegrp,
+    age_60_to_79_years = age_60_to_79_years_tot_female_agegrp + age_60_to_79_years_tot_male_agegrp,
+    age_80_years_or_older = age_80_years_or_older_tot_female_agegrp + age_80_years_or_older_tot_male_agegrp
+  ) %>% 
+  select(-tot_female, -tot_male, -wa_male, -wa_female, -ba_female, -ba_male, -h_male, -h_female, -aac_male, -aac_female, -age_0_to_19_years_tot_female_agegrp, -age_0_to_19_years_tot_male_agegrp, -age_20_to_39_years_tot_female_agegrp, -age_20_to_39_years_tot_male_agegrp, -age_40_to_59_years_tot_female_agegrp, -age_40_to_59_years_tot_male_agegrp, -age_60_to_79_years_tot_female_agegrp, -age_60_to_79_years_tot_male_agegrp, -age_80_years_or_older_tot_female_agegrp, -age_80_years_or_older_tot_male_agegrp)
+
+
+# # Normalize variables
+# # divide all variables that have female in them by tot_female and same for male
+# final_dem_2016 <- final_dem_2016 %>% 
+#   mutate_at(names(final_dem_2016)[str_detect(names(final_dem_2016), "_female") & names(final_dem_2016) != "tot_female"], ~./tot_female)
+# 
+# # divide all variables that have male in them by tot_male 
+# final_dem_2016 <- final_dem_2016 %>% 
+#   mutate_at(names(final_dem_2016)[str_detect(names(final_dem_2016), "_male") & names(final_dem_2016) != "tot_male"], ~./tot_male)
 
 # Normalize female and male against population estimate
 final_dem_2016 <- final_dem_2016 %>% 
-  mutate_at(c("tot_female", "tot_male"), ~./popestimate2016)
+  mutate_at(vars(race_white:age_80_years_or_older), ~./popestimate2016)
 
-
-# Normalize variables
-# divide all variables that have female in them by tot_female and same for male
 final_dem_2019 <- final_dem_2019 %>% 
-  mutate_at(names(final_dem_2019)[str_detect(names(final_dem_2019), "_female") & names(final_dem_2019) != "tot_female"], ~./tot_female)
-
-# divide all variables that have male in them by tot_male 
-final_dem_2019 <- final_dem_2019 %>% 
-  mutate_at(names(final_dem_2019)[str_detect(names(final_dem_2019), "_male") & names(final_dem_2019) != "tot_male"], ~./tot_male)
-
-# Normalize female and male against population estimate
-final_dem_2019 <- final_dem_2019 %>% 
-  mutate_at(c("tot_female", "tot_male"), ~./popestimate2019)
-
-
+  mutate_at(vars(race_white:age_80_years_or_older), ~./popestimate2019)
 
 # Merge fips codes
 final_dem_2016 <- final_dem_2016 %>% 
@@ -256,8 +273,9 @@ final_dem_2016 <- final_dem_2016 %>%
 final_dem_2019 <- final_dem_2019 %>% 
   unite(state, county, col = "fips", sep = "")
 
-
-
+# Fix names
+names(final_dem_2016) <- str_replace_all(names(final_dem_2016), "2016", "")
+names(final_dem_2019) <- str_replace_all(names(final_dem_2019), "2019", "")
 
 # OUTPUT ------------------------------------------------------------------
 write_csv(base_final, "../../data/Clean Data/base_county_state_fips_lkp.csv")
