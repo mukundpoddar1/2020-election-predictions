@@ -13,8 +13,9 @@ library(forcats)
 library(dslabs)
 library(corrplot)
 
-#subset data to just United States
-dataset <- read.csv("merged_final_dataset.csv")
+#final datasets for 2016 and 2020
+dataset_2016 <- read.csv("../merged_final_2016.csv")
+dataset_2020 <- read.csv("../merged_final_2020.csv")
 
 #create list of countries for drop-down selection
 variable_choices <- setNames(names(dataset),names(dataset))
@@ -47,19 +48,22 @@ ui <- fluidPage(
             
             # plot output and text output
             fluidRow(
-                column(9,
+                column(6,
                        plotOutput("scatterPlot")
+                ), # end of column 1
+                column(6,
+                       plotOutput("scatterPlot2")
                 ), # end of column 1
             ), #end of fluidRow
             
-            fluidRow(
-                # 1st column: input up to 10 predictors
+                fluidRow(
+                # 5th column: input up to 10 predictors
                 column(7,
-                       selectizeInput(inputId = "corr", label = "Select up to 10 variables for correlation plot",
-                                      choices = variable_choices,options=list(maxItems=10),
-                       selected = "age_0_to_19_years_tot_female_2012.y")
-                ), # end of first column
-            ), # end of fluidRow
+                    selectizeInput(inputId = "corr", label = "Select up to 10 variables for correlation plot",
+                                   choices = variable_choices,options=list(maxItems=10),
+                                   selected = "unemployment")
+                ), #end column
+            ), #end fluidRow
             
             fluidRow(
                 column(9,
@@ -67,36 +71,58 @@ ui <- fluidPage(
                 ),
             ),
             fluidRow(
+                column(9,
+                       plotOutput("Corr_matrix_2")
+                ),
+            ),
+            fluidRow(
                 # another column, select variable to see distribution
                 column(3,
                        selectInput(inputId = "hist_selection", label = "Choose a variable:",
                                    choices = variable_choices,
-                                   selected = "age_0_to_19_years_tot_female_2012.y")
+                                   selected = "unemployment")
                 ) #end of column
             ), # end of fluidRow 
             fluidRow(
-                column(9,
+                column(6,
                        plotOutput("hist")
-                )
+                ),
+                column(6,
+                       plotOutput("hist_2")
+                ),
             )
 ) #end of fluidPage
 
 server <- function(input, output) {
-    #scatterplot plot for year vs life expectancy for the United States and another selected country
+    #scatterplot plot for 2 variables for 2016 and 2020
     output$scatterPlot <- renderPlot({
-        # make a scatterplot for life expectancy against fertility rate, filtering for the year 2000 and coloring by continent
-        ggplot(dataset, aes_string(x = input$variable_1, y = input$variable_2)) +
-            geom_point(aes(colour = stname.x))
+        ggplot(dataset_2016, aes_string(x = input$variable_1, y = input$variable_2)) +
+            geom_point()+ggtitle("2016 scatterplot")
     }) # end of renderPlot
     
+    output$scatterPlot2 <- renderPlot({
+        ggplot(dataset_2020, aes_string(x = input$variable_1, y = input$variable_2)) +
+            geom_point()+ggtitle("2020 scatterplot")
+    }) # end of renderPlot
+
     output$Corr_matrix <- renderPlot({
-        corrplot(cor(select(dataset,contains(input$corr)),
-                     use = "pairwise.complete.obs"),method="number")
+        corrplot(cor(select(dataset_2016,contains(input$corr)),
+                     use = "pairwise.complete.obs"),method="number",title="2016 Correlation Matrix",mar=c(0,0,2,0))
+    })
+    
+    output$Corr_matrix_2 <- renderPlot({
+        corrplot(cor(select(dataset_2020,contains(input$corr)),
+                     use = "pairwise.complete.obs"),method="number",title="2020 Correlation Matrix",mar=c(0,0,2,0))
     })
     
     output$hist <-renderPlot({
-        ggplot(dataset, aes_string(input$hist_selection))+geom_histogram()+
-            theme(axis.text.x = element_text(angle = 90, hjust = 1))
+        ggplot(dataset_2016, aes_string(input$hist_selection))+geom_histogram()+
+            theme(axis.text.x = element_text(angle = 90, hjust = 1))+ggtitle("2016 histogram")
+    })
+    
+    output$hist_2 <-renderPlot({
+        ggplot(dataset_2020, aes_string(input$hist_selection))+geom_histogram()+
+            theme(axis.text.x = element_text(angle = 90, hjust = 1))+ggtitle("2020 histogram")
     })
 }
 

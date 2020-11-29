@@ -17,7 +17,7 @@ library(readxl)
 consumer_consumption <- read_csv("../../data/Source Data/SAEXP1__ALL_AREAS_1997_2018.csv")
 
 #read in state name to abbreviation crosswalk
-# state_abbrev <- read_xlsx("../../data/Source Data/state name to abbrev crosswalk.xlsx")
+state_abbrev <- read_xlsx("../../data/Source Data/state name to abbrev crosswalk.xlsx")
 
 #read in county/state crosswalk
 base_county_state_fips <- read_csv("../../data/Clean Data/base_county_state_fips_lkp.csv")
@@ -99,6 +99,13 @@ combine_columns <- function(df){
          df["Durable goods"]+df["Other durable goods"]
       )
    )
+   
+   #combine goods and clothing and footwear because they're highly correlated
+   df$goods_clothing_footwear <- as.numeric(
+      unlist(
+         df["Goods"]+df["Clothing and footwear"]
+      )
+   )
 
    df$services <- as.numeric(unlist(df["Services"]+df["Other services"]))
    df$Recreation<- as.numeric(unlist(df["Recreation services"]+df["Recreational goods and vehicles"]))
@@ -115,32 +122,45 @@ combine_columns <- function(df){
                                      `Services`,`Other services`,
                                      `Recreation services`,`Recreational goods and vehicles`,
                                      `Final consumption expenditures of nonprofit institutions serving households (NPISHs)`,
-                                     `Motor vehicles and parts`,`Transportation services`)))
+                                     `Motor vehicles and parts`,`Transportation services`,`Goods`,`Clothing and footwear`)))
    }
 
 
 consumption_18 <- combine_columns(consumer_consumption_county_18)
 consumption_16 <- combine_columns(consumer_consumption_county_16)
 
+per_capita <- function(year, consumption_df){
+county_pop_map <- base_county_state_fips %>% left_join(
+   (county_pop %>% separate(...1, c("County","State"), sep = ", ") %>% slice(2:3143) %>% select(County, State,year) %>%
+      rename(population = year)), by=c("ctyname"="County","stname"="State")
+   ) %>% select(population, fips)
+consumption_18_pop <- consumption_df %>% select(fips) %>% left_join(county_pop_map,by="fips")
+consumption_18_per_capita <- as.matrix(consumption_df %>% select(everything(),-c(fips))) %>% sweep(2,consumption_18_pop$population,FUN='/')
+return(data.frame(consumption_18_per_capita,fips=consumption_df$fips))
+}
+
+consumption_16_per_capita <- per_capita("2016",consumption_16)
+consumption_18_per_capita <- per_capita("2018",consumption_18)
+
+
 #correlation matrices
 library(corrplot)
  
-correlation_18 <- subset(consumption_18, select = -c(fips))
-correlation_16 <- subset(consumption_16, select = -c(fips))
+correlation_18 <- subset(consumption_18_per_capita, select = -c(fips))
+correlation_16 <- subset(consumption_16_per_capita, select = -c(fips))
 
-corrplot(cor(correlation_18, use = "pairwise.complete.obs"))
-corrplot(cor(correlation_16, use = "pairwise.complete.obs"))
+corrplot(cor(correlation_18, use = "pairwise.complete.obs"),method="number")
+corrplot(cor(correlation_16, use = "pairwise.complete.obs"),method="number")
 
-#correlations are super high, going to add up all expenditure together
-
-consumption_16_final <- data.frame(fips=consumption_16$fips,consumer_exp=
-                                      rowSums(correlation_16))
-
-consumption_18_final <- data.frame(fips=consumption_16$fips,consumer_exp=
-                                      rowSums(correlation_18))
+#Combine all consumer spending if needed
+# consumption_16_final <- data.frame(fips=consumption_16$fips,consumer_exp=
+#                                       rowSums(correlation_16))
+# 
+# consumption_18_final <- data.frame(fips=consumption_16$fips,consumer_exp=
+#                                       rowSums(correlation_18))
 
 ######OUTPUT
-head(consumption_18_final)
-head(consumption_16_final)
-write_csv(consumption_16_final,"../../data/Clean Data/consumer_spending_2016.csv")
-write_csv(consumption_18_final,"../../data/Clean Data/consumer_spending_2018.csv")
+head(consumption_18_per_capita)
+head(consumption_16_per_capita)
+write_csv(consumption_16_per_capita,"../../data/Clean Data/consumer_spending_2016.csv")
+write_csv(consumption_18_per_capita,"../../data/Clean Data/consumer_spending_2018.csv")
