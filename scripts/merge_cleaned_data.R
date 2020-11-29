@@ -134,8 +134,13 @@ names_2016 <- c("fips" , "dem_amount" , "rep_amount", "popestimate2016", "netmig
 
 names_2020 <- c("fips" , "dem_amount" , "rep_amount", "popestimate2019", "netmig2019", "tot_male",  "tot_female", "wa_male", "wa_female", "ba_male", "ba_female", "h_male", "h_female", "aac_male" , "aac_female", "age_0_to_19_years_tot_female_agegrp", "age_0_to_19_years_tot_male_agegrp", "age_20_to_39_years_tot_female_agegrp", "age_20_to_39_years_tot_male_agegrp", "age_40_to_59_years_tot_female_agegrp", "age_40_to_59_years_tot_male_agegrp", "age_60_to_79_years_tot_female_agegrp", "age_60_to_79_years_tot_male_agegrp" , "age_80_years_or_older_tot_female_agegrp", "age_80_years_or_older_tot_male_agegrp", "consumer_exp" , "raw_gdp", "gdp_change", "unemployment", "dem_poll_mean", "dem_poll_median", "dem_poll_sd", "rep_poll_mean" , "rep_poll_median" , "rep_poll_sd", "consistency_dem", "consistency_rep", "democrats.2020", "republicans.2020")
 
+# Keeping only records where popestimate 2016 is defined for 2016 
+merged_final_2016 <- merged_final_2016 %>% filter(!is.na(popestimate2016))
 
 
+# Subset names
+merged_final_2016 <- merged_final_2016[, names_2016]
+merged_final_2020 <- merged_final_2020[, names_2020]
 
 # OUTPUT ------------------------------------------------------------------
 
