@@ -18,13 +18,33 @@ df$Democrats.2008 <- as.numeric(df$Democrats.2008)/100
 df1 <- df %>% 
     mutate(consistency_dem = Democrats.2012 / Democrats.2008) %>%
     mutate(consistency_rep = Republicans.2012 / Republicans.2008)
+    #aggregate(Less.Than.High.School.Diploma ~ , FUN=sum)
 
 # Creating data frames
 df_election <- df1 %>%
-    select(Fips, Republicans.2016, Democrats.2016, Republicans.2012, Democrats.2012, Republicans.2008, Democrats.2008, consistency_dem, consistency_rep)
+    #filter(State != "Alaska") %>%
+    select(State, Fips, Republicans.2016, Democrats.2016, Republicans.2012, Democrats.2012, Republicans.2008, Democrats.2008, consistency_dem, consistency_rep)
+    
+# Getting Alaska Fips
+alaska_fips <- df_election %>% filter(State == "Alaska") %>%
+    .$Fips
 
+# Setting boolean values
+remove_fips <- alaska_fips != 2240
+
+# Getting fip codes I want to drop
+a_fip <- alaska_fips[remove_fips]
+
+# Dropping the codes I dont want to keep
+df_election <- df_election %>%
+    filter(!Fips %in% a_fip)
+
+# Changing last county fip to 0200 
+df_election$Fips[df_election$Fips == 2240] <- paste(0,2000 , sep = '')
+
+# Subsetting demographic and environmental data
 df_demographics_environment <- df1 %>% 
-    select(Fips, Less.Than.High.School.Diploma:Elevation.Bins)
+    select(State, Fips, Less.Than.High.School.Diploma:precip)
 
 # Writing file 
 write.csv(df_election, "data/Clean Data/saul_cleaned/clean_election_results_2016.csv", row.names=FALSE)
