@@ -42,6 +42,25 @@ df_election <- df_election %>%
 # Changing last county fip to 0200 
 df_election$Fips[df_election$Fips == 2240] <- paste(0,2000 , sep = '')
 
+## NJP Additions ##################
+# Drop rando Virgina county
+df_election <- df_election[df_election$Fips != "51515", ] 
+
+# Manually input Alaska data for 2008 and 2016 (pulled from NPR)
+df_election[df_election$Fips == "02000",]$Republicans.2016 <-  .529
+df_election[df_election$Fips == "02000",]$Democrats.2016 <-  .377
+# Pulled from Politico
+df_election[df_election$Fips == "02000",]$Republicans.2012 <- .553
+df_election[df_election$Fips == "02000",]$Democrats.2012 <- .413
+#Pulled from NYTimes
+df_election[df_election$Fips == "02000",]$Republicans.2008 <- .598
+df_election[df_election$Fips == "02000",]$Democrats.2008 <- .38
+
+df_election[df_election$Fips == "02000",]$consistency_dem <- df_election[df_election$Fips == "02000",]$Democrats.2012/df_election[df_election$Fips == "02000",]$Democrats.2008
+df_election[df_election$Fips == "02000",]$consistency_rep <- df_election[df_election$Fips == "02000",]$Republicans.2012/df_election[df_election$Fips == "02000",]$Republicans.2008
+####################################
+
+
 # Subsetting demographic and environmental data
 df_demographics_environment <- df1 %>% 
     select(State, Fips, Less.Than.High.School.Diploma:precip)
