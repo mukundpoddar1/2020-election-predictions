@@ -29,6 +29,9 @@ dim(test)
 test_complete <- test[complete.cases(test), ]
 dim(test_complete)
 
+#read in county/state crosswalk
+base_county_state_fips <- read_csv("../data/Clean Data/base_county_state_fips_lkp.csv")
+
 # electoral college
 elect_tbl <- read_csv("../data/electoral_college.csv")
 
@@ -39,6 +42,7 @@ train.boost <- as.matrix(train_complete[,c(4:(length(train_complete)-2))])
 test.boost <- as.matrix(test_complete[c(4:(length(train_complete)-2))])
 
 #look into why some rows have NA values
+#SCALE PREDICTORS, check mukund's file
 
 train_final <- matrix(as.numeric(data.matrix(train.boost)), nrow = nrow(train_complete))
 test_final <- matrix(as.numeric(data.matrix(test.boost)), nrow = nrow(test_complete))
@@ -61,3 +65,4 @@ xgb_model = xgboost(data=train_final,
                          )
 test_preds <- predict(xgb_model, test_final, missing = NaN)
 rmse(test_complete$democrats.2020,test_preds)
+plot(test_complete$democrats.2020,test_preds)

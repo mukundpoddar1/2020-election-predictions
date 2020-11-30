@@ -9,9 +9,15 @@
 
 #original data SAEXP1__ALL_AREAS_1997_2018.csv
 
+# SETUP -------------------------------------------------------------------
+
+rm(list = ls())
+
+gc(reset = TRUE)
 library(tidyverse)
 library(readxl)
-
+# ----------------------------------------------------------------------------
+   
 ######DATA SOURCES
 #read in table for consumer spending from 2015
 consumer_consumption <- read_csv("../../data/Source Data/SAEXP1__ALL_AREAS_1997_2018.csv")
@@ -30,7 +36,8 @@ county_pop$...1 <- str_remove(county_pop$...1,".")
 
 consumption_func <- function(county_population, year){
    #DATA WRANGLING
-   county_df <- county_population %>% separate(...1, c("County","State"), sep = ", ") %>% slice(2:3143) %>% select(County, State, year) %>%
+   county_df <- county_population %>% separate(...1, c("County","State"), sep = ", ") %>%
+      slice(2:3143) %>% select(County, State, year) %>%
       rename(population = year)
    
    county_df <- county_df %>%
@@ -39,8 +46,14 @@ consumption_func <- function(county_population, year){
       group_by(County, add=TRUE) %>%
       mutate(percent=population/countT) %>% select(everything(),-c(population,countT))
    
+   #edit for Doña Ana County and ottineau county
+   county_df$County[which(county_df$County=="Do\xf1a Ana County")]<- "Doña Ana County"
+   county_df$County[which(county_df$County=="Bottineau County")]<- "ottineau"
+   
+   
    consumer_consumption_cleaned <- consumer_consumption %>% select(GeoName, Description, year) %>%
       filter(GeoName %in% state_abbrev$`US State`) %>% spread(Description, year) %>% rename(stname=GeoName)
+   
    
    #######MERGING
    
@@ -54,7 +67,7 @@ consumption_func <- function(county_population, year){
    
    #remove percent column
    consumer_consumption_county <- select(consumer_consumption_county, everything(),-percent)
-   consumer_consumption_county = subset(consumer_consumption_county, select = -c(state,county,stname,ctyname))
+   consumer_consumption_county <- subset(consumer_consumption_county, select = -c(state,county,stname,ctyname))
    
    #edit for Alaska
    alaska_row <- consumer_consumption %>% filter(GeoName=="Alaska") %>% select(GeoName, Description, year) %>%
@@ -67,6 +80,9 @@ consumption_func <- function(county_population, year){
    
    return(consumer_consumption_county)
 }
+
+#New Mexico   "Do\xf1a Ana County" 35013
+#North Dakota "Bottineau County"   38009
 
 
 consumer_consumption_county_16 <- consumption_func(county_pop,"2016")

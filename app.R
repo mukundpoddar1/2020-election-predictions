@@ -14,11 +14,15 @@ library(dslabs)
 library(corrplot)
 
 #final datasets for 2016 and 2020
-dataset_2016 <- read.csv("../merged_final_2016.csv")
-dataset_2020 <- read.csv("../merged_final_2020.csv")
+dataset_2016 <- read.csv("data/merged_final_2016.csv")
+dataset_2020 <- read.csv("data/merged_final_2020.csv")
 
 #create list of countries for drop-down selection
-variable_choices <- setNames(names(dataset),names(dataset))
+variable_choices <- setNames(names(dataset_2016),names(dataset_2016))
+
+# colors for correlation matrix
+col4 <- colorRampPalette(c("#7F0000","red","#FF7F00","yellow","#7FFF7F", 
+                           "cyan", "#007FFF", "blue","#00007F"))
 
 ui <- fluidPage(
         #second tab for scatter plot
@@ -97,31 +101,31 @@ server <- function(input, output) {
     #scatterplot plot for 2 variables for 2016 and 2020
     output$scatterPlot <- renderPlot({
         ggplot(dataset_2016, aes_string(x = input$variable_1, y = input$variable_2)) +
-            geom_point()+ggtitle("2016 scatterplot")
+            geom_point(colour="red")+ggtitle("2016 scatterplot")
     }) # end of renderPlot
     
     output$scatterPlot2 <- renderPlot({
         ggplot(dataset_2020, aes_string(x = input$variable_1, y = input$variable_2)) +
-            geom_point()+ggtitle("2020 scatterplot")
+            geom_point(colour="blue")+ggtitle("2020 scatterplot")
     }) # end of renderPlot
 
     output$Corr_matrix <- renderPlot({
         corrplot(cor(select(dataset_2016,contains(input$corr)),
-                     use = "pairwise.complete.obs"),method="number",title="2016 Correlation Matrix",mar=c(0,0,2,0))
+                     use = "pairwise.complete.obs"),method="number",title="2016 Correlation Matrix",mar=c(0,0,2,0),col=col4(10))
     })
     
     output$Corr_matrix_2 <- renderPlot({
         corrplot(cor(select(dataset_2020,contains(input$corr)),
-                     use = "pairwise.complete.obs"),method="number",title="2020 Correlation Matrix",mar=c(0,0,2,0))
+                     use = "pairwise.complete.obs"),method="number",title="2020 Correlation Matrix",mar=c(0,0,2,0),col=col4(10))
     })
     
     output$hist <-renderPlot({
-        ggplot(dataset_2016, aes_string(input$hist_selection))+geom_histogram()+
+        ggplot(dataset_2016, aes_string(input$hist_selection))+geom_histogram(fill="red")+
             theme(axis.text.x = element_text(angle = 90, hjust = 1))+ggtitle("2016 histogram")
     })
     
     output$hist_2 <-renderPlot({
-        ggplot(dataset_2020, aes_string(input$hist_selection))+geom_histogram()+
+        ggplot(dataset_2020, aes_string(input$hist_selection))+geom_histogram(fill="blue")+
             theme(axis.text.x = element_text(angle = 90, hjust = 1))+ggtitle("2020 histogram")
     })
 }
