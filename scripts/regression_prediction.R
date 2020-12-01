@@ -25,6 +25,60 @@ elect_tbl <- read_csv("../data/electoral_college.csv")
 
 # FIT MODELS --------------------------------------------------------------
 
+#####################################################################
+
+# LOGISTIC ON 2020 --------------------------------------------------------
+# Keep complete cases
+elections_2020_model <- na.omit(elections_2020[, c()])
+
+# outcome variable
+elections_2020$party_outcome <- ifelse(elections_2020$democrats_pct > elections_2020$republicans_pct, 1, 0)
+
+covs <- names(elections_2020)[!names(elections_2020) %in% c("fips", "financial.services.and.insurance", "gasoline.and.other.energy.goods", "health.care", "other.nondurable.goods", "personal.consumption.expenditures", "food", "household", "nonprofit", "nondurable_goods", "durable_goods", "goods_clothing_footwear", "services", "recreation", "transportation",  "republicans_pct", "democrats_pct", "party_outcome")]
+
+# Keep complete cases
+elections_2020_model <- na.omit(elections_2020[, c("fips", covs, "party_outcome")])
+
+cov_statement <- paste0(covs, collapse = " + ")
+
+# Logistic model
+mod.log <- glm(eval(paste0("party_outcome ~ ", cov_statement)), data = elections_2020_model, family = binomial())
+
+# Use the fitted probabilities from the logistic model as percentages
+outcome <- data.frame(fips = elections_2020_model$fips, popestimate = elections_2020_model$popestimate, fitted_pct = fitted(mod.log))
+
+# Generate population outcomes with fitted probabilities
+outcome$dems_pop <- outcome$fitted_pct*outcome$popestimate
+outcome$reps_pop <- (1-outcome$fitted_pct)*outcome$popestimate
+
+# Roll up to state and match with electoral college.
+outcome %>% 
+  mutate(
+    state_fips = str_sub(fips, 1,2)
+  )%>% 
+  # Remove Maine and Nebraska
+  filter(
+    !state_fips %in% c("23", "31")
+  ) %>% 
+  group_by(state_fips) %>% 
+  summarize(
+    pct_dem = sum(dems_pop, na.rm = T)/sum(popestimate),
+    pct_rep = sum(reps_pop, na.rm = T)/sum(popestimate)
+  ) %>% 
+  mutate(
+    dem_ind = ifelse(pct_dem >= pct_rep, 1, 0)
+  ) %>% 
+  inner_join(
+    elect_tbl,
+    by = c("state_fips" = "fips")
+  ) %>% 
+  group_by(dem_ind) %>% 
+  summarize(total_votes = sum(elect_votes))  
+
+
+
+#####################################################################
+
 # MLR to predict Democrat vote counts 
 # Get list of covariates
 covs <- names(elections_2020)[!names(elections_2020) %in% c("fips", "democrats.2020", "republicans.2020")]
