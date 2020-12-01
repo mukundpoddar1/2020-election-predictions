@@ -1,0 +1,61 @@
+---
+title: "ml_models"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(e1071)
+```
+
+We will load our dataset here that has been cleaned and put together with all the scripts in the 'cleaning_scripts folder'. We will then standardise the data.
+
+Note: many ML applications use the data from the training set only to standardise the test set. However, that is the general practice when real world examples come one at a time while the training has been performed on many more instance together. The assumption there is that the distribution of the data is uniform across the training and test examples. In our application, each election cycle is unique, and is processed together. Before a certain election year, all the counties' predictors would be collected and the predictions would be done as a batch. Hence, we can standardise data grouped by an election cycle.
+
+```{r dataset, message = FALSE}
+train = read_csv("../data/merged_final_2016.csv")
+test = read_csv("../data/merged_final_2020.csv")
+train = train[complete.cases(train),]
+x_train = train[c(2:(length(train)-2))]
+y_train = train[length(train)-1]
+colnames(y_train) = 'actual'
+
+test = test[complete.cases(test),]
+x_test = test[c(2:(length(test)-2))]
+y_test = test[length(test)-1]
+colnames(y_test) = 'actual'
+
+x_train = scale(x_train)
+x_test = scale(x_test)
+# col_means = apply(x_train, 2, mean)
+# col_sds = apply(x_train, 2, sd)
+
+# x_train = sweep(x_train, 2, col_means, FUN = "-")
+# x_train = sweep(x_train, 2, col_sds, FUN = "/")
+# x_test = sweep(x_test, 2, col_means, FUN = "-")
+# x_test = sweep(x_test, 2, col_sds, FUN = "/")
+```
+
+We now start using different Machine Learning models to predict the election outcomes. To keep some standardisation, we will store the actual results, and the predictions from each of the models we use into the y_train and y_test dataframes created above.
+
+The first model we use is Support Vector Machines. This model creates a decision boundary between the classes being predicted using the datapoints on the edges of the class clusters. You can read more about SVMs on [wikipedia](https://en.wikipedia.org/wiki/Support_vector_machine).
+```{r svm}
+svm_model = svm(x=x_train, y=y_train)
+y_test$svm = predict(svm_model, x_test)
+```
+
+For the next model, we will use XGBoost... <Insert Ben's writeup if any>
+```{r xgboost}
+
+```
+ 
+So on for all the models...
+
+We want to now look at the metrics for all the models used. For now we just visualise the predictions against the actual outcomes, and we will fill more here in due time.
+```{r visualisation}
+# will correct aspect ratio
+ggplot(y_test, aes(x=actual)) + geom_point(aes(y=svm)) + geom_abline(slope=1, intercept = 0, color='red') +ylim(c(0,1))
+```
+
