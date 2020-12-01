@@ -13,9 +13,12 @@ gc(reset = TRUE)
 
 library(tidyverse)
 library(ggplot2)
-
+library(caret)
 
 # LOAD DATA ---------------------------------------------------------------
+
+# load 2016 data
+elections_2016 <- read_csv("../data/merged_final_2016.csv")
 
 # load 2020 data
 elections_2020 <- read_csv("../data/merged_final_2020.csv")
@@ -29,24 +32,51 @@ elect_tbl <- read_csv("../data/electoral_college.csv")
 
 # LOGISTIC ON 2020 --------------------------------------------------------
 # Keep complete cases
-elections_2020_model <- na.omit(elections_2020[, c()])
 
 # outcome variable
+elections_2016$party_outcome <- ifelse(elections_2016$democrats_pct > elections_2016$republicans_pct, 1, 0)
 elections_2020$party_outcome <- ifelse(elections_2020$democrats_pct > elections_2020$republicans_pct, 1, 0)
 
 covs <- names(elections_2020)[!names(elections_2020) %in% c("fips", "financial.services.and.insurance", "gasoline.and.other.energy.goods", "health.care", "other.nondurable.goods", "personal.consumption.expenditures", "food", "household", "nonprofit", "nondurable_goods", "durable_goods", "goods_clothing_footwear", "services", "recreation", "transportation",  "republicans_pct", "democrats_pct", "party_outcome")]
 
 # Keep complete cases
-elections_2020_model <- na.omit(elections_2020[, c("fips", covs, "party_outcome")])
+elections_2016_model <- na.omit(elections_2016[, c("fips", covs, "party_outcome", "democrats_pct", "republicans_pct")])
+elections_2020_model <- na.omit(elections_2020[, c("fips", covs, "party_outcome", "democrats_pct", "republicans_pct")])
 
-cov_statement <- paste0(covs, collapse = " + ")
+# Split training data
+train <- createDataPartition(y = elections_2016_model$party_outcome, p = .6, list = F)
+training <- elections_2016_model[train, ]
+testing <- elections_2016_model[-train, ]
+
 
 # Logistic model
-mod.log <- glm(eval(paste0("party_outcome ~ ", cov_statement)), data = elections_2020_model, family = binomial())
+cov_statement <- paste0(covs, collapse = " + ")
+mod.log <- glm(eval(paste0("party_outcome ~ ", cov_statement)), data = training, family = binomial())
+summary(mod.log)
+
+# Test
+testing$predicted <- predict(mod.log, testing, type = "response")
+# not sure how to interpret these predictions
+testing$predicted_out <- ifelse(testing$predicted > 0.6, 1, 0)
+count(testing, party_outcome, predicted_out)
+# A tibble: 4 x 3
+# party_outcome predicted_out     n
+# <dbl>         <dbl> <int>
+# 1             0             0  1016
+# 2             0             1    26
+# 3             1             0    62
+# 4             1             1   140
+
+# Check on 2016 on 2020 - model prediction is way off
+elections_2020_model$prediction <- predict(mod.log, elections_2020_model, type = "response")
+
+
+# elections_2020_model$prediction <- ifelse(elections_2020_model$prediction > 0.5, 1, 0)
+# count(elections_2020_model, party_outcome, prediction)
 
 # Use the fitted probabilities from the logistic model as percentages
-outcome <- data.frame(fips = elections_2020_model$fips, popestimate = elections_2020_model$popestimate, fitted_pct = fitted(mod.log))
-
+outcome <- data.frame(fips = elections_2020_model$fips, popestimate = elections_2020_model$popestimate, fitted_pct = round(elections_2020_model$prediction,3), democrats_pct = elections_2020_model$democrats_pct, republicans_pct = elections_2020_model$republicans_pct)
+# outcome$fitted_pct <- round(ifelse(outcome$fitted_pct > 1, 1, outcome$fitted_pct),4)
 # Generate population outcomes with fitted probabilities
 outcome$dems_pop <- outcome$fitted_pct*outcome$popestimate
 outcome$reps_pop <- (1-outcome$fitted_pct)*outcome$popestimate
@@ -56,7 +86,7 @@ outcome %>%
   mutate(
     state_fips = str_sub(fips, 1,2)
   )%>% 
-  # Remove Maine and Nebraska
+  # Remove Max`ine and Nebraska
   filter(
     !state_fips %in% c("23", "31")
   ) %>% 
