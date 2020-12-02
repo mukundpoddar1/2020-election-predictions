@@ -67,8 +67,39 @@ elect_tbl <- base %>%
 names(elect_tbl) <- c("fips", "state", "elect_votes")
 
 
+# Remove the congressional votes from Maine and Nebraska
+elect_tbl[elect_tbl$fips %in% c("23", "31"), ]$elect_votes <- 2
+
+
+# Set up Maine and Nebraska  ----------------------------------------------
+maine_neb <- elect_tbl %>% 
+  filter(state %in% c("Maine", "Nebraska")) %>% 
+  select(fips, state) %>% 
+  left_join(
+    base,
+    by = c("fips"="state")
+  )
+
+names(maine_neb) <- c("state_fips", "state", "county", "stname", "ctyname", "fips")
+
+
+# Maine: 
+# 1st congressional - Cumberland, Knox, Lincoln, Sagadahoc, York, Kennebec
+# 2nd congressional - Androscoggin, Aroostook, Franklin, Hancock, Oxford, Penobscot, Piscataquis, Somerset, Waldo, Washington
+maine_neb$congress_district[maine_neb$state_fips == "23"] <- "CD-2"
+maine_neb$congress_district[maine_neb$fips %in% c("23005", "23013", "23015", "23023", "23011", "23031")] <- "CD-1"
+
+# Nebraska:
+# 1st congressional: Burt, Butler, Cass, Colfax, Cuming, Dodge, Lancaster, Madison, Otoe, Platte, Polk, Saunders, Seward, Stanton, Thurston, Washington, Dixon, Merrick, and Sarpy 
+# 2nd congressional: Douglas
+# 3rd congressional: Adams, Antelope, Arthur, Banner, Blaine, Boone, Box Butte, Boyd, Brown, Buffalo, Cedar, chase, Cherry, Cheyenne, Clay, Custer, Dakota, Dawes, Dawson, Deuel, Dundy, Fillmore, Franklin, Frontier, Furnas, Gage, Garden, Garfield, Gosper, Grant, Greeley, Hall, Hamilton, Harlan, Hayes, Hitchcock, Holt, Hooker, Howard, Jefferson, Johnson, Kearney, Keith, Keya Paha, Kimball, Knox, Lincoln, Logan, Loup, McPherson, Morrill, Nance, Nemaha, Nuckolls, Pawnee, Perkins, Phelps, Pierce, Red Willow, Richardson, Rock, Saline, Scotts Bluff, Sheridan, Sherman, Sioux, Thayer, Thomas, Valley, Wayne, Webster, Wheeler, York
+maine_neb$congress_district[maine_neb$state_fips == "31"] <- "CD-3"
+maine_neb$congress_district[maine_neb$fips %in% c("31021", "31023", "31025", "31037", "31039", "31053", "31109", "31119", "31131", "31141", "31143", "31155", "31159", "31167", "31173", "31177", "31051", "31121", "31153")] <- "CD-1"
+maine_neb$congress_district[maine_neb$fips == "31055"] <- "CD-2"
 
 # OUTPUT ------------------------------------------------------------------
 
 
 write_csv(elect_tbl, "../data/electoral_college.csv")
+write_csv(maine_neb, "../data/electoral_votes_main_nebraska.csv")
+

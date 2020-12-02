@@ -18,15 +18,16 @@ fips,state,elect_votes
 20,Kansas,6
 21,Kentucky,8
 22,Louisiana,8
-23,Maine,4
+23,Maine,2
 24,Maryland,10
 25,Massachusetts,11
 26,Michigan,16
 27,Minnesota,10
 28,Mississippi,6
+28,Mississippi,6
 29,Missouri,10
 30,Montana,3
-31,Nebraska,5
+31,Nebraska,2
 32,Nevada,6
 33,New Hampshire,4
 34,New Jersey,14
@@ -49,4 +50,5 @@ fips,state,elect_votes
 53,Washington,12
 54,West Virginia,5
 55,Wisconsin,10
+56,Wyoming,3
 56,Wyoming,3
