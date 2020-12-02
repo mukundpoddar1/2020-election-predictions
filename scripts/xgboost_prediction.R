@@ -48,25 +48,66 @@ x_test = scale(test.boost)
 train_final <- matrix(as.numeric(data.matrix(x_train)), nrow = nrow(train_complete))
 test_final <- matrix(as.numeric(data.matrix(x_test)), nrow = nrow(test_complete))
 party_outcome <- ifelse(train_complete$democrats_pct>train_complete$republicans_pct,1,0)
-outcome <- matrix(data.matrix(party_outcome))
+#party_outcome <- train_complete$democrats_pct
+outcome <- matrix(as.numeric(data.matrix(party_outcome)))
 
 
 
-#look to implement gridSearch: https://www.kaggle.com/silverstone1903/xgboost-grid-search-r
+# GRID SEARCH -------------------------------------------------------------------------------
+searchGridSubCol <- expand.grid(subsample = c(0.5,0.7,1), 
+                                colsample_bytree = c(0.5,0.7,1),
+                                max_depth = c(3, 4,5,6),
+                                min_child = seq(1), 
+                                eta = c(0.1,0.2,0.3,0.4)
+)
+
+system.time(
+  rmseErrorsHyperparameters <- apply(searchGridSubCol, 1, function(parameterList){
+    
+    #Extract Parameters to test
+    currentSubsampleRate <- parameterList[["subsample"]]
+    currentColsampleRate <- parameterList[["colsample_bytree"]]
+    currentDepth <- parameterList[["max_depth"]]
+    currentEta <- parameterList[["eta"]]
+    currentMinChild <- parameterList[["min_child"]]
+    xgb_model <- xgboost(data =  train_final, label=outcome, nrounds = 100, 
+                         verbose = 1,"max.depth" = currentDepth, "eta" = currentEta,                               
+                         "subsample" = currentSubsampleRate, "colsample_bytree" = currentColsampleRate
+                         , print_every_n = 20, "min_child_weight" = currentMinChild,
+                         early_stopping_rounds = 10)
+    
+    xvalidationScores <- as.data.frame(xgb_model$evaluation_log)
+    rmse <- tail(xvalidationScores$test_rmse_mean, 1)
+    trmse <- tail(xvalidationScores$train_rmse_mean,1)
+    print(rmse)
+    print(trmse)
+    output <- return(c(rmse, trmse, currentSubsampleRate, currentColsampleRate, currentDepth, currentEta, currentMinChild))}))
+
+output <- as.data.frame(t(rmseErrorsHyperparameters))
+varnames <- c("TestRMSE", "TrainRMSE", "SubSampRate", "ColSampRate", "Depth", "currentMinChild","eta")
+names(output) <- varnames
+head(output)
+# -----------------------------------------------------------------------------------------------
 
 #https://xgboost.readthedocs.io/en/latest/parameter.html
 xgb_model = xgboost(data=train_final, 
-                         label=outcome, 
-                         missing = NaN,
-                         nrounds=1000,
-                         verbosity=1, 
-                         eta=0.3, 
-                         max_depth=6, 
-                         subsample=1, 
-                         colsample_bytree=1,
-                         objective="binary:logistic", 
-                         eval_metric="rmse"
-                         )
+                    label=outcome, 
+                    missing = NaN,
+                    nrounds=1000,
+                    verbosity=1, 
+                    eta=0.3, 
+                    max_depth=6, 
+                    subsample=1, 
+                    min_child=1,
+                    colsample_bytree=1,
+                    objective="reg:squarederror", #binary:logistic 
+                    eval_metric="rmse"
+                    )
+
+train_preds <- predict(xgb_model, train_final, missing = NaN)
+rmse(train_complete$democrats_pct,train_preds)
+plot(train_complete$democrats_pct,train_preds)
+
 test_preds <- predict(xgb_model, test_final, missing = NaN)
 rmse(test_complete$democrats_pct,test_preds)
 plot(test_complete$democrats_pct,test_preds)
