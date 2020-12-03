@@ -76,6 +76,26 @@ mod.log_back <- glm(formula = actual ~ dem_amount + rep_amount + popestimate +
 # Predict 2020
 x_test$pred <- predict(mod.log_back, x_test, type = "response")
 
+#MSE
+mean((x_test$pred - x_test$actual) ^2) # 0.09476399
+
+# Plot
+x_test %>% 
+  ggplot(aes(x = actual, y = pred, group = actual)) +
+  geom_boxplot() +
+  scale_y_continuous(breaks = seq(0,1, by =  .1)) +
+  theme_bw() 
+
+x_test %>% 
+  ggplot(aes(x = na.omit(elections_2020)$democrats_pct, y = pred)) +
+  geom_point()+
+  geom_smooth(method = "glm", method.args = list(family = "quasibinomial"), se = F)+
+  xlab("Actual % Democrat") +
+  ylab("Predicted % Democrat")+
+  theme_bw()
+
+# CALCULATE ELECTORAL COLLEGE --------------------------------------------
+
 # Use the fitted probabilities from the logistic model as percentages
 outcome <- data.frame(fips = na.omit(elections_2020)$fips, popestimate = x_test$popestimate, fitted_pct = round(x_test$pred,3))
 # outcome$fitted_pct <- round(ifelse(outcome$fitted_pct > 1, 1, outcome$fitted_pct),4)

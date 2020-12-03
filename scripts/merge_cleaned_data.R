@@ -160,6 +160,10 @@ merged_final_2016 <- merged_final_2016 %>% filter(!is.na(popestimate))
 merged_final_2016 <- merged_final_2016[, names_final]
 merged_final_2020 <- merged_final_2020[, names_final]
 
+merged_final_2016$dem_rep_ratio <- merged_final_2016$democrats_pct/merged_final_2016$republicans_pct
+merged_final_2020$dem_rep_ratio <- merged_final_2020$democrats_pct/merged_final_2020$republicans_pct
+merged_final_2016 <- merged_final_2016 %>% select(-democrats_pct, -republicans_pct)
+merged_final_2020 <- merged_final_2020 %>% select(-democrats_pct, -republicans_pct)
 # OUTPUT ------------------------------------------------------------------
 
 write_csv(merged_final_2016, "../data/merged_final_2016.csv")

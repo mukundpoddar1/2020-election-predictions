@@ -40,7 +40,26 @@ x_test = scale(x_test)
 
 We now start using different Machine Learning models to predict the election outcomes. To keep some standardisation, we will store the actual results, and the predictions from each of the models we use into the y_train and y_test dataframes created above.
 
-The first model we use is Support Vector Machines. This model creates a decision boundary between the classes being predicted using the datapoints on the edges of the class clusters. You can read more about SVMs on [wikipedia](https://en.wikipedia.org/wiki/Support_vector_machine).
+The first model we use is a multiple linear regression. We selected a subset of our covariates for this model using a backwards stepwise selection:
+```{r mlr}
+# Set up data as dataframe for MLR
+x_train_mlr <- x_train %>% data.frame() %>% bind_cols(y_train)
+x_test_mlr <- x_test %>% data.frame() %>% bind_cols(y_test)
+# Fit model with backwards selected variables
+covs <- names(x_train)[-length(names(x_train))]
+covs <- paste0(covs, collapse = " + ")
+
+mlr_model <- lm(actual ~ popestimate + race_white + race_black + 
+    race_hispanic + race_aac + age_0_to_19_years + age_20_to_39_years + 
+    age_40_to_59_years + nonprofit + nondurable_goods + raw_gdp + 
+    gdp_change + unemployment + dem_poll_median + dem_poll_sd + 
+    rep_poll_mean + rep_poll_median + rep_poll_sd + consistency_dem, data = x_train_mlr)
+
+y_test$mlr = predict(mlr_model, x_test_mlr)
+```
+
+
+The next model we use is Support Vector Machines. This model creates a decision boundary between the classes being predicted using the datapoints on the edges of the class clusters. You can read more about SVMs on [wikipedia](https://en.wikipedia.org/wiki/Support_vector_machine).
 ```{r svm}
 svm_model = svm(x=x_train, y=y_train)
 y_test$svm = predict(svm_model, x_test)
