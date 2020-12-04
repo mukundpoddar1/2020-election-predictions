@@ -1,5 +1,12 @@
 # 2020-election-predictions
-An attempt to predict the 2020 US Presidential Elections 
+An attempt to predict the 2020 US Presidential Elections  
+
+## Authors:  
+
+* Ben Shea
+* Mukund Poddar
+* Nellie Ponarul
+* Saul Holding
 
 ## Contents
 1. [Raw Data Sources](#sources)
@@ -28,7 +35,9 @@ An attempt to predict the 2020 US Presidential Elections
     * Cleaned files: _census_clean_2016.csv_ and _census_clean_2019_: 
     * Sources: 
       * U.S. Census Bureau, Population Division: Annual Resident Population Estimates, Estimated Components of Resident Population Change, and Rates of the Components of Resident Population Change for States and Counties: April 1, 2010 to July 1, 2019
+        * https://www2.census.gov/programs-surveys/popest/datasets/2010-2019/counties/
       * U.S. Census Bureau, Population Division: Annual County Resident Population Estimates by Age, Sex, Race, and Hispanic Origin: April 1, 2010 to July 1, 2019
+        * https://www2.census.gov/programs-surveys/popest/datasets/2010-2019/counties/
     * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/cleaning_scripts/census_clean.R)
   
 **Polling Data** 
