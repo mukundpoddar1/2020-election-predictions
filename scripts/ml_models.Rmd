@@ -65,9 +65,78 @@ svm_model = svm(x=x_train, y=y_train)
 y_test$svm = predict(svm_model, x_test)
 ```
 
-For the next model, we will use XGBoost... <Insert Ben's writeup if any>
+For the next model, we will use XGBoost. This model is an optimized distributed gradient boosting library, which produces a prediction model in the form of an ensemble of weak prediction models, typically decision trees. [parameters](https://xgboost.readthedocs.io/en/latest/parameter.html)
 ```{r xgboost}
+train_final <- matrix(as.numeric(data.matrix(x_train)), nrow = nrow(train_complete))
+test_final <- matrix(as.numeric(data.matrix(x_test)), nrow = nrow(test_complete))
+#train_party_outcome <- ifelse(train_complete$democrats_pct>train_complete$republicans_pct,1,0)
+train_party_outcome <- train_complete$dem_rep_ratio
+train_outcome <- matrix(as.numeric(data.matrix(train_party_outcome)))
 
+# GRID SEARCH -------------------------------------------------------------------------------
+#https://www.kaggle.com/silverstone1903/xgboost-grid-search-r
+
+searchGridSubCol <- expand.grid(subsample = c(0.5,0.7,1), 
+                                colsample_bytree = c(0.5,0.7,1),
+                                max_depth = c(3,4,5,6),
+                                eta = c(0.1,0.2,0.3,0.4)
+)
+
+obj<- "reg:squarederror"
+
+weightsData <- scales::rescale(train_complete$popestimate, to=c(0,1))
+
+system.time(
+  rmseErrorsHyperparameters <- apply(searchGridSubCol, 1, function(parameterList){
+    
+    #Extract Parameters to test
+    currentSubsampleRate <- parameterList[["subsample"]]
+    currentColsampleRate <- parameterList[["colsample_bytree"]]
+    currentDepth <- parameterList[["max_depth"]]
+    currentEta <- parameterList[["eta"]]
+    currentMinChild <- 1
+    xgb_model <- xgboost(data =  train_final, label=train_outcome, nrounds = 100, 
+                         verbose = 0,"max.depth" = currentDepth, "eta" = currentEta,                               
+                         "subsample" = currentSubsampleRate, "colsample_bytree" = currentColsampleRate
+                         , print_every_n = 20, "min_child_weight" = currentMinChild,
+                         early_stopping_rounds = 10,objective=obj, eval_metric="rmse", #weights = weightsData
+                         )
+    
+    xvalidationScores <- as.data.frame(xgb_model$evaluation_log)
+    trmse <- tail(xvalidationScores$train_rmse,1)
+    output <- return(c(trmse, currentSubsampleRate, currentColsampleRate, currentDepth, currentEta, currentMinChild))}))
+
+output <- as.data.frame(t(rmseErrorsHyperparameters))
+varnames <- c("TrainRMSE", "SubSampRate", "ColSampRate", "Depth","eta","currentMinChild")
+names(output) <- varnames
+head(output)
+best_params <- output[which.min(output$TrainRMSE),]
+best_params
+# -----------------------------------------------------------------------------------------------
+
+#https://xgboost.readthedocs.io/en/latest/parameter.html
+xgb_model = xgboost(data=train_final, 
+                    label=train_outcome, 
+                    missing = NaN,
+                    nrounds=100,
+                    verbosity=1, 
+                    eta=best_params$eta, 
+                    max_depth=best_params$Depth, 
+                    subsample=best_params$SubSampRate, 
+                    min_child=best_params$currentMinChild,
+                    colsample_bytree=best_params$ColSampRate,
+                    objective=obj, 
+                    eval_metric="rmse"
+                    #,weights = weightsData
+                    )
+
+train_preds <- predict(xgb_model, train_final, missing = NaN)
+rmse(train_complete$dem_rep_ratio,train_preds)
+plot(train_complete$dem_rep_ratio,train_preds)
+
+test_preds <- predict(xgb_model, test_final, missing = NaN)
+rmse(test_complete$dem_rep_ratio,test_preds)
+plot(test_complete$dem_rep_ratio,test_preds)
 ```
  
 So on for all the models...
