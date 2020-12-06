@@ -169,6 +169,10 @@ load("../data/raw_predictions.rda")
 # electoral college
 elect_tbl <- read_csv("../data/electoral_college.csv")
 maine_neb <- read_csv("../data/electoral_votes_main_nebraska.csv")
+
+# Actual results 2020
+elect_tbl_actual_2020 <- read_csv("../data/electoral_college_actual_2020.csv")
+maine_neb_actual_2020 <- read_csv("../data/electoral_votes_main_nebraska_actual_2020.csv")
 #read in county/state crosswalk
 base_county_state_fips <- read_csv("../data/Clean Data/base_county_state_fips_lkp.csv")
 
@@ -246,7 +250,7 @@ get_electoral_college <- function(df, pred_input, elect_votes =  elect_tbl, main
   
   # Check state win for Main and Nebraska (set it to 0 since these are not winner-take-all states)
   
-  final_elect_rollup$state_win[final_elect_rollup$stname %in% c("Maine", "Nebraska")] <- 0
+  # final_elect_rollup$state_win[final_elect_rollup$stname %in% c("Maine", "Nebraska")] <- 0
   
   
   return(final_elect_rollup)
@@ -256,6 +260,43 @@ get_electoral_college <- function(df, pred_input, elect_votes =  elect_tbl, main
 
 electoral_college_predictions <- map(.x = list("mlr", "svm", "xgb"), .f = ~get_electoral_college(test, .x)) %>% setNames(list("mlr", "svm", "xgb"))
 
+# Synthesize actual outcomes and add them to the list
+  actual_results <- bind_rows(
+    elect_tbl_actual_2020 %>% 
+      mutate(
+        dem_electoral_votes = state_win*elect_votes,
+        rep_electoral_votes = elect_votes - dem_electoral_votes
+      ),
+    maine_neb_actual_2020 %>% 
+      distinct(state_fips, state, congress_district, state_win) %>% 
+      mutate(
+        dem_electoral_votes = 1*state_win, 
+        rep_electoral_votes = 1 - dem_electoral_votes
+        ) %>% 
+      group_by(state_fips, state, state_win) %>% 
+      summarize(
+        dem_electoral_votes = sum(dem_electoral_votes), 
+        rep_electoral_votes = sum(rep_electoral_votes)) %>% 
+      rename(fips = state_fips)
+    )
+
+  actual_results <- actual_results %>% 
+    group_by(fips, state) %>% 
+    summarize(
+      dem_electoral_votes = sum(dem_electoral_votes), 
+      rep_electoral_votes = sum(rep_electoral_votes),
+      state_win = max(state_win, na.rm = T)
+    ) %>% 
+    rename(
+      state_fips = fips,
+      stname = state
+    )
+  
+  # Fix nebraska state win
+  actual_results[actual_results$stname == "Nebraska", ]$state_win <- 0
+  
+  electoral_college_predictions[["actual"]] <- actual_results
+  
 # Save out predictions for Shiny app
 saveRDS(electoral_college_predictions, "../data/electoral_college_predictions.rds")
 

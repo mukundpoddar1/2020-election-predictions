@@ -97,9 +97,14 @@ maine_neb$congress_district[maine_neb$state_fips == "31"] <- "CD-3"
 maine_neb$congress_district[maine_neb$fips %in% c("31021", "31023", "31025", "31037", "31039", "31053", "31109", "31119", "31131", "31141", "31143", "31155", "31159", "31167", "31173", "31177", "31051", "31121", "31153")] <- "CD-1"
 maine_neb$congress_district[maine_neb$fips == "31055"] <- "CD-2"
 
+
+## 2020 Actual results - 1 for dem win, 0 for rep win
+
+
+
 # OUTPUT ------------------------------------------------------------------
 
 
-write_csv(elect_tbl, "../data/electoral_college.csv")
-write_csv(maine_neb, "../data/electoral_votes_main_nebraska.csv")
+write_csv(elect_tbl %>% distinct(), "../data/electoral_college.csv")
+write_csv(maine_neb %>% distinct(), "../data/electoral_votes_main_nebraska.csv")
 

@@ -712,6 +712,27 @@ elect_tbl &lt;- read_csv(&quot;../data/electoral_college.csv&quot;)</code></pre>
 ##   fips = col_double(),
 ##   congress_district = col_character()
 ## )</code></pre>
+<pre class="r"><code># Actual results 2020
+elect_tbl_actual_2020 &lt;- read_csv(&quot;../data/electoral_college_actual_2020.csv&quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   fips = col_double(),
+##   state = col_character(),
+##   elect_votes = col_double(),
+##   state_win = col_double()
+## )</code></pre>
+<pre class="r"><code>maine_neb_actual_2020 &lt;- read_csv(&quot;../data/electoral_votes_main_nebraska_actual_2020.csv&quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   state_fips = col_double(),
+##   state = col_character(),
+##   county = col_double(),
+##   stname = col_character(),
+##   ctyname = col_character(),
+##   fips = col_double(),
+##   congress_district = col_character(),
+##   state_win = col_double()
+## )</code></pre>
 <pre class="r"><code>#read in county/state crosswalk
 base_county_state_fips &lt;- read_csv(&quot;../data/Clean Data/base_county_state_fips_lkp.csv&quot;)</code></pre>
 <pre><code>## Parsed with column specification:
@@ -796,7 +817,7 @@ get_electoral_college &lt;- function(df, pred_input, elect_votes =  elect_tbl, m
   
   # Check state win for Main and Nebraska (set it to 0 since these are not winner-take-all states)
   
-  final_elect_rollup$state_win[final_elect_rollup$stname %in% c(&quot;Maine&quot;, &quot;Nebraska&quot;)] &lt;- 0
+  # final_elect_rollup$state_win[final_elect_rollup$stname %in% c(&quot;Maine&quot;, &quot;Nebraska&quot;)] &lt;- 0
   
   
   return(final_elect_rollup)
@@ -814,7 +835,44 @@ electoral_college_predictions &lt;- map(.x = list(&quot;mlr&quot;, &quot;svm&quo
 <pre><code>## `summarise()` regrouping output by &#39;state_fips&#39; (override with `.groups` argument)</code></pre>
 <pre><code>## `summarise()` regrouping output by &#39;state&#39; (override with `.groups` argument)</code></pre>
 <pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
-<pre class="r"><code># Save out predictions for Shiny app
+<pre class="r"><code># Synthesize actual outcomes and add them to the list
+  actual_results &lt;- bind_rows(
+    elect_tbl_actual_2020 %&gt;% 
+      mutate(
+        dem_electoral_votes = state_win*elect_votes,
+        rep_electoral_votes = elect_votes - dem_electoral_votes
+      ),
+    maine_neb_actual_2020 %&gt;% 
+      distinct(state_fips, state, congress_district, state_win) %&gt;% 
+      mutate(
+        dem_electoral_votes = 1*state_win, 
+        rep_electoral_votes = 1 - dem_electoral_votes
+        ) %&gt;% 
+      group_by(state_fips, state, state_win) %&gt;% 
+      summarize(
+        dem_electoral_votes = sum(dem_electoral_votes), 
+        rep_electoral_votes = sum(rep_electoral_votes)) %&gt;% 
+      rename(fips = state_fips)
+    )</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;state_fips&#39;, &#39;state&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>  actual_results &lt;- actual_results %&gt;% 
+    group_by(fips, state) %&gt;% 
+    summarize(
+      dem_electoral_votes = sum(dem_electoral_votes), 
+      rep_electoral_votes = sum(rep_electoral_votes),
+      state_win = max(state_win, na.rm = T)
+    ) %&gt;% 
+    rename(
+      state_fips = fips,
+      stname = state
+    )</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;fips&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>  # Fix nebraska state win
+  actual_results[actual_results$stname == &quot;Nebraska&quot;, ]$state_win &lt;- 0
+  
+  electoral_college_predictions[[&quot;actual&quot;]] &lt;- actual_results
+  
+# Save out predictions for Shiny app
 saveRDS(electoral_college_predictions, &quot;../data/electoral_college_predictions.rds&quot;)</code></pre>
 </div>
 </div>
