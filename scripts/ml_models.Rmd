@@ -11,6 +11,7 @@ library(ggplot2)
 library(e1071)
 library(xgboost)
 library(Metrics)
+library(caret)
 ```
 
 
@@ -108,11 +109,11 @@ system.time(
     currentDepth <- parameterList[["max_depth"]]
     currentEta <- parameterList[["eta"]]
     currentMinChild <- 1
-    xgb_model <- xgboost(data =  x_train, label=train_outcome, nrounds = 100, 
+    xgb_model <- xgboost(data =  x_train, label=train_outcome, nrounds = 200, 
                          verbose = 0,"max.depth" = currentDepth, "eta" = currentEta,                               
                          "subsample" = currentSubsampleRate, "colsample_bytree" = currentColsampleRate
-                         , print_every_n = 20, "min_child_weight" = currentMinChild,
-                         early_stopping_rounds = 10,objective=obj, eval_metric="rmse", #weights = weightsData
+                         , print_every_n = 20, "min_child_weight" = 1,
+                         early_stopping_rounds = 20,objective=obj, eval_metric="rmse", weight = weightsData
                          )
     
     xvalidationScores <- as.data.frame(xgb_model$evaluation_log)
@@ -131,16 +132,16 @@ best_params
 xgb_model = xgboost(data=x_train, 
                     label=train_outcome, 
                     missing = NaN,
-                    nrounds=100,
-                    verbosity=1, 
+                    nrounds=200,
+                    verbose=0, 
                     eta=best_params$eta, 
                     max_depth=best_params$Depth, 
                     subsample=best_params$SubSampRate, 
                     min_child=best_params$currentMinChild,
                     colsample_bytree=best_params$ColSampRate,
                     objective=obj, 
-                    eval_metric="rmse"
-                    #,weights = weightsData
+                    eval_metric="rmse",
+                    weight = weightsData
                     )
 
 # train_preds <- predict(xgb_model, x_train, missing = NaN)
@@ -149,13 +150,13 @@ xgb_model = xgboost(data=x_train,
 
 # test_preds <- predict(xgb_model, x_test, missing = NaN)
 test$xgb <- predict(xgb_model, test_final, missing = NaN)
-xgboost_rmse <- rmse(test$dem_rep_ratio,test_preds)
+xgboost_rmse <- rmse(test$dem_rep_ratio,test$xgb)
 # plot(test$dem_rep_ratio,test_preds)
 ```  
 
 ```{r, echo = F}
 # Save out predictions so we don't run code multiple times
-# save(mlr_model, svm_model, xgb_model, test, file = "../data/raw_predictions.rda")
+#save(mlr_model, svm_model, xgb_model, test, file = "../data/raw_predictions.rda")
 load("../data/raw_predictions.rda")
 ```
 
@@ -304,6 +305,22 @@ saveRDS(electoral_college_predictions, "../data/electoral_college_predictions.rd
 
 ```
 
+```{r electoral_college_results}
+# Create a data frame of total ellectoral college prediction
+mlr_total <- electoral_college_predictions$mlr[c("dem_electoral_votes","rep_electoral_votes")] %>% colSums()
+svm_total <- electoral_college_predictions$svm[c("dem_electoral_votes","rep_electoral_votes")] %>% colSums()
+xgb_total <- electoral_college_predictions$xgb[c("dem_electoral_votes","rep_electoral_votes")] %>% colSums()
+actual_total <- electoral_college_predictions$actual[c("dem_electoral_votes","rep_electoral_votes")] %>% colSums()
+
+
+data.frame(
+  Models = c("Multiple Linear Regression", "Support Vector Machine", "XGBoost","Actual"),
+  `Total Democratic Electoral Votes` = rbind(mlr_total["dem_electoral_votes"],svm_total["dem_electoral_votes"],
+                                             xgb_total["dem_electoral_votes"],actual_total["dem_electoral_votes"]),
+    `Total Republican Electoral Votes` = rbind(mlr_total["rep_electoral_votes"],svm_total["rep_electoral_votes"],
+                                             xgb_total["rep_electoral_votes"],actual_total["rep_electoral_votes"])
+) %>% kableExtra::kable() %>% kableExtra::kable_styling()
+```
 
 ### Error Metrics  
 
@@ -327,6 +344,7 @@ test %>%
   ggtitle("Plot of predictions against actual values\n(Ratio of Democrat to Republican Votes)")
   
 ```  
+
 ```{r rmse}
 # Create a data frame of all root MSEs
 data.frame(
@@ -335,8 +353,17 @@ data.frame(
            sqrt(mean(svm_model$residuals^2)),
            rmse(test$dem_rep_ratio,predict(xgb_model, x_test, missing = NaN)))
 ) %>% kableExtra::kable() %>% kableExtra::kable_styling()
+```
 
-
+```{r r_squared}
+# Create a data frame of all R^2
+data.frame(
+  Models = c("Multiple Linear Regression", "Support Vector Machine", "XGBoost"),
+  `R-Squared` = c(R2(test$dem_rep_ratio, test$mlr),
+                  R2(test$dem_rep_ratio, test$svm),
+                  R2(test$dem_rep_ratio, test$xgb)
+                )
+) %>% kableExtra::kable() %>% kableExtra::kable_styling()
 ```
 
 

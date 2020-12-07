@@ -87,6 +87,7 @@ consumption_func <- function(county_population, year){
 
 consumer_consumption_county_16 <- consumption_func(county_pop,"2016")
 consumer_consumption_county_18 <- consumption_func(county_pop,"2018")
+
  
 #combine columns together in similar groups
 
@@ -146,15 +147,24 @@ consumption_18 <- combine_columns(consumer_consumption_county_18)
 consumption_16 <- combine_columns(consumer_consumption_county_16)
 
 per_capita <- function(year, consumption_df){
-county_pop_map <- base_county_state_fips %>% left_join(
-   (county_pop %>% separate(...1, c("County","State"), sep = ", ") %>% slice(2:3143) %>% select(County, State,year) %>%
-      rename(population = year)), by=c("ctyname"="County","stname"="State")
-   ) %>% select(population, fips)
-consumption_18_pop <- consumption_df %>% select(fips) %>% left_join(county_pop_map,by="fips")
-consumption_18_per_capita <- as.matrix(consumption_df %>% select(everything(),-c(fips))) %>% sweep(2,consumption_18_pop$population,FUN='/')
-return(data.frame(consumption_18_per_capita,fips=consumption_df$fips))
+   cleaned_county_pop <- (county_pop %>% separate(...1, c("County","State"), sep = ", ") %>%
+                             slice(2:3143) %>% select(County, State,year) %>%
+                             rename(population = year))
+   county_pop_map <- base_county_state_fips %>% left_join(cleaned_county_pop, by=c("ctyname"="County","stname"="State")) %>%
+      select(population, fips)
+   
+   #add in Alaska population
+   alaska_pop <- sum(cleaned_county_pop$population[which(cleaned_county_pop$State=="Alaska")])
+   county_pop_map$population[which(county_pop_map$fips=="02000")] <- alaska_pop
+   #county_pop_map <- rbind(county_pop_map,data.frame(population=alaska_pop,fips="02000"))
+   
+   #divide consumption expense by population
+   consumption_pop <- consumption_df %>% select(fips) %>% left_join(county_pop_map,by="fips")
+   consumption_per_capita <- as.matrix(consumption_df %>% select(everything(),-c(fips))) %>% sweep(2,consumption_pop$population,FUN='/')
+   return(data.frame(consumption_per_capita,fips=consumption_df$fips))
 }
 
+#debug(per_capita)
 consumption_16_per_capita <- per_capita("2016",consumption_16)
 consumption_18_per_capita <- per_capita("2018",consumption_18)
 

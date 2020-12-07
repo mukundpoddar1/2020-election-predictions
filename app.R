@@ -36,9 +36,7 @@ model_choices = c("Multiple Logistic Regression" = "mlr", "Support Vector Machin
 
 # Function to calculate State categories from county percentages
 get_county <- function(df, model_pred) {
-    # Can't get this to work
-    df %>% 
-        mutate(outcome := ifelse({{model_pred}} > 1, "Democrat", "Republican")) %>% 
+    df %>% mutate(outcome = ifelse(df[model_pred] > 1, "Democrat", "Republican")) %>% 
         distinct(fips, outcome) %>% return()
 }
 
@@ -140,13 +138,20 @@ ui <- navbarPage( title = "Can we predict the US Presidential Elections?",
                                               )
                                     ), # end column
                              column(5,
-                                    wellPanel("Predicted Reults 2020",
+                                    wellPanel("Predicted Results 2020",
                                               plotOutput("predict_2020")
                                     ) # end wellPanel
                              ),
                              column(1)
-                         ) # end fluidRow
-                         ) # end tabPanel
+                             ), # end fluidRow
+                         fluidRow(
+                            column(10,
+                                   wellPanel("Electoral Votes by Party",
+                                             tableOutput("electoral_votes")
+                                )
+                            )
+                        )
+                ) # end tabPanel
             
             
 ) #end of navbarPage
@@ -257,6 +262,18 @@ server <- function(input, output) {
                   axis.title = element_blank(),
                   axis.text = element_blank(),
                   axis.ticks = element_blank())
+    })
+    
+    output$electoral_votes <- renderTable({
+        
+        model_electoral_votes <- colSums(electoral_preds[[input$model]][c("dem_electoral_votes","rep_electoral_votes")])
+        actual_electoral_votes <- colSums(electoral_preds[["actual"]][c("dem_electoral_votes","rep_electoral_votes")])
+        data.frame(model=c(input$model,"actual"),
+                   `Total Democratic Electoral Votes`=c(model_electoral_votes["dem_electoral_votes"],
+                                                        actual_electoral_votes["dem_electoral_votes"]),
+                   `Total Republican Electoral Votes`=c(model_electoral_votes["rep_electoral_votes"],
+                                                        actual_electoral_votes["rep_electoral_votes"])
+        )
     })
         
 }
