@@ -1,0 +1,17 @@
+Most ML applications use the data from the training set only to standardise the test set. The cardinal rule is to never use information you cannot have in the real world to make a prediction. This method of scaling is done for a few primary reasons:
+1. It is assumed that the test data and the training data come from the same distribution.
+2. It is assumed that each data point is independent of one another and can be looked in isolation to make a prediction.
+3. In the real world we might not get a lot of test samples together in a batch, such that we can calculate its mean and variance in isolation. For example in the real world we might need to classify for a single sample, where the mean and variance of the test set becomes meaningless.
+
+
+However all these assumptions do not hold true in our dataset. And in our method of scaling the cardinal rule is also not violated as any information we do use is available to us at the time of making a prediction. Let us look at each of the points outlined above in relation to our dataset.
+1. Each election cycle is unique and a county in an election year has a high degree of correlation to the other counties in that election cycle. Each election cycle likely has different parameters even if the distribution of the data is the same. For example, the mean of all counties' GDP in 2020 is very likely to be different than the mean of the distribution for 2016. Hence, knowing about the economic data of a county in Florida in 2020 can tell you something about a county in California in 2020 that data about the same county in Florida in 2016 will not tell you. Ergo, different election cycles' data arise from distributions with different parameters.
+2. As stated above, the data points are not independent of each other. The same election cycle will have a unique trend in that cycle different from other cycles, and similar to different counties in the same cycle. Knowing the change in California's GDP in 2020 likely tells you something about the change expected in Florida's GDP.
+3. The nature of presidential race predictions require you to predict the results of exactly 51 states each time (barring creation or destruction of states), no more, no less. There is no real reason to predict the presidential race in a county Florida in a scenario you are not trying to do the same for all the other states, or at least have data on the other states. Even if such a scenario exists, our application is not being designed for it. Our application is designed to operate under the constraint of trying to predict all 51 states' counties, and we feel this is a reasonably easy restriction to meet for presidential elections.
+
+Before a certain election year, all the counties' predictors would be collected and the predictions would be done as a batch. Hence, we feel we can standardise data grouped by an election cycle, whether it is a part of the test set or the train set. If the training set had data on multiple elections, each election would thus also be scaled independently.
+
+Some resources used to understand reasons for scaling using only training data:
+https://sebastianraschka.com/faq/docs/scale-training-test.html
+https://www.researchgate.net/post/If-I-used-data-normalization-x-meanx-stdx-for-training-data-would-I-use-train-Mean-and-Standard-Deviation-to-normalize-test-data
+https://stackoverflow.com/questions/43302871/do-you-apply-min-max-scaling-separately-on-training-and-test-data

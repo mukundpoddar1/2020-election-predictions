@@ -19,7 +19,7 @@ library(caret)
 
 We will load our dataset here that has been cleaned and put together with all the scripts in the 'cleaning_scripts folder'. We will then standardise the data.
 
-Note: many ML applications use the data from the training set only to standardise the test set. However, that is the general practice when real world examples come one at a time while the training has been performed on many more instance together. The assumption there is that the distribution of the data is uniform across the training and test examples. In our application, each election cycle is unique, and is processed together. Before a certain election year, all the counties' predictors would be collected and the predictions would be done as a batch. Hence, we can standardise data grouped by an election cycle.
+Note:  we scale the test data here independently of the training data. This is non-standard practice that we deliberately choose here and the reasoning for it can be read at test_set_scaling.md.
 
 ```{r dataset, message = FALSE}
 train = read_csv("../data/merged_final_2016.csv")
@@ -36,13 +36,6 @@ colnames(y_test) = 'actual'
 
 x_train = scale(x_train)
 x_test = scale(x_test)
-# col_means = apply(x_train, 2, mean)
-# col_sds = apply(x_train, 2, sd)
-
-# x_train = sweep(x_train, 2, col_means, FUN = "-")
-# x_train = sweep(x_train, 2, col_sds, FUN = "/")
-# x_test = sweep(x_test, 2, col_means, FUN = "-")
-# x_test = sweep(x_test, 2, col_sds, FUN = "/")
 ```
 
 We now start using different Machine Learning models to predict the election outcomes. To keep some standardisation, we will store the actual results, and the predictions from each of the models we use into the y_train and y_test dataframes created above.
@@ -301,11 +294,11 @@ electoral_college_predictions <- map(.x = list("mlr", "svm", "xgb"), .f = ~get_e
 # Save out predictions for Shiny app
 saveRDS(electoral_college_predictions, "../data/electoral_college_predictions.rds")
 
-
-
 ```
 
 ```{r electoral_college_results}
+electoral_college_predictions <- readRDS("../data/electoral_college_predictions.rds")
+
 # Create a data frame of total ellectoral college prediction
 mlr_total <- electoral_college_predictions$mlr[c("dem_electoral_votes","rep_electoral_votes")] %>% colSums()
 svm_total <- electoral_college_predictions$svm[c("dem_electoral_votes","rep_electoral_votes")] %>% colSums()
@@ -328,8 +321,6 @@ We want to now look at the metrics for all the models used. For now we just visu
 
 
 ```{r visualisation}
-# will correct aspect ratio
-ggplot(test, aes(x=dem_rep_ratio)) + geom_point(aes(y=svm)) + geom_abline(slope=1, intercept = 0, color='red') +ylim(c(0,1))
 
 test %>% 
   select(dem_rep_ratio, mlr, svm, xgb) %>% 
@@ -338,9 +329,11 @@ test %>%
   geom_point(alpha = 0.6) +
   geom_abline(slope = 1, intercept = 0) +
   scale_color_manual(name = "Prediction\nType", values = c("darkolivegreen3", "darkorange3", "dodgerblue3")) +
+  scale_x_log10() +
+  scale_y_log10() +
   theme_bw() +
   xlab("Actual Values") +
-  ylab("Predictions") +
+  ylab("Predictions") + 
   ggtitle("Plot of predictions against actual values\n(Ratio of Democrat to Republican Votes)")
   
 ```  
