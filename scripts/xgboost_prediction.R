@@ -39,27 +39,32 @@ maine_neb <- read_csv("../data/electoral_votes_main_nebraska.csv")
 # FIT MODELS --------------------------------------------------------------
 
 #remove outcome variables and fips code
-train.boost <- as.matrix(train_complete[,c(4:(length(train_complete)-2))])
-test.boost <- as.matrix(test_complete[c(4:(length(train_complete)-2))])
+train.boost <- as.matrix(train_complete[,c(4:(length(train_complete)-1))])
+test.boost <- as.matrix(test_complete[c(4:(length(train_complete)-1))])
 
 x_train = scale(train.boost)
 x_test = scale(test.boost)
 
 train_final <- matrix(as.numeric(data.matrix(x_train)), nrow = nrow(train_complete))
 test_final <- matrix(as.numeric(data.matrix(x_test)), nrow = nrow(test_complete))
-party_outcome <- ifelse(train_complete$democrats_pct>train_complete$republicans_pct,1,0)
-#party_outcome <- train_complete$democrats_pct
-outcome <- matrix(as.numeric(data.matrix(party_outcome)))
+#train_party_outcome <- ifelse(train_complete$democrats_pct>train_complete$republicans_pct,1,0)
+train_party_outcome <- train_complete$dem_rep_ratio
+train_outcome <- matrix(as.numeric(data.matrix(train_party_outcome)))
 
 
 
 # GRID SEARCH -------------------------------------------------------------------------------
+#https://www.kaggle.com/silverstone1903/xgboost-grid-search-r
+
 searchGridSubCol <- expand.grid(subsample = c(0.5,0.7,1), 
                                 colsample_bytree = c(0.5,0.7,1),
-                                max_depth = c(3, 4,5,6),
-                                min_child = seq(1), 
+                                max_depth = c(3,4,5,6),
                                 eta = c(0.1,0.2,0.3,0.4)
 )
+
+obj<- "reg:squarederror"
+
+weightsData <- scales::rescale(train_complete$popestimate, to=c(0,1))
 
 system.time(
   rmseErrorsHyperparameters <- apply(searchGridSubCol, 1, function(parameterList){
@@ -69,62 +74,63 @@ system.time(
     currentColsampleRate <- parameterList[["colsample_bytree"]]
     currentDepth <- parameterList[["max_depth"]]
     currentEta <- parameterList[["eta"]]
-    currentMinChild <- parameterList[["min_child"]]
-    xgb_model <- xgboost(data =  train_final, label=outcome, nrounds = 100, 
-                         verbose = 1,"max.depth" = currentDepth, "eta" = currentEta,                               
+    currentMinChild <- 1
+    xgb_model <- xgboost(data =  train_final, label=train_outcome, nrounds = 100, 
+                         verbose = 0,"max.depth" = currentDepth, "eta" = currentEta,                               
                          "subsample" = currentSubsampleRate, "colsample_bytree" = currentColsampleRate
                          , print_every_n = 20, "min_child_weight" = currentMinChild,
-                         early_stopping_rounds = 10)
+                         early_stopping_rounds = 10,objective=obj, eval_metric="rmse", #weights = weightsData
+                         )
     
     xvalidationScores <- as.data.frame(xgb_model$evaluation_log)
-    rmse <- tail(xvalidationScores$test_rmse_mean, 1)
-    trmse <- tail(xvalidationScores$train_rmse_mean,1)
-    print(rmse)
-    print(trmse)
-    output <- return(c(rmse, trmse, currentSubsampleRate, currentColsampleRate, currentDepth, currentEta, currentMinChild))}))
+    trmse <- tail(xvalidationScores$train_rmse,1)
+    output <- return(c(trmse, currentSubsampleRate, currentColsampleRate, currentDepth, currentEta, currentMinChild))}))
 
 output <- as.data.frame(t(rmseErrorsHyperparameters))
-varnames <- c("TestRMSE", "TrainRMSE", "SubSampRate", "ColSampRate", "Depth", "currentMinChild","eta")
+varnames <- c("TrainRMSE", "SubSampRate", "ColSampRate", "Depth","eta","currentMinChild")
 names(output) <- varnames
 head(output)
+best_params <- output[which.min(output$TrainRMSE),]
+best_params
 # -----------------------------------------------------------------------------------------------
 
 #https://xgboost.readthedocs.io/en/latest/parameter.html
 xgb_model = xgboost(data=train_final, 
-                    label=outcome, 
+                    label=train_outcome, 
                     missing = NaN,
-                    nrounds=1000,
+                    nrounds=100,
                     verbosity=1, 
-                    eta=0.3, 
-                    max_depth=6, 
-                    subsample=1, 
-                    min_child=1,
-                    colsample_bytree=1,
-                    objective="reg:squarederror", #binary:logistic 
+                    eta=best_params$eta, 
+                    max_depth=best_params$Depth, 
+                    subsample=best_params$SubSampRate, 
+                    min_child=best_params$currentMinChild,
+                    colsample_bytree=best_params$ColSampRate,
+                    objective=obj, 
                     eval_metric="rmse"
+                    #,weights = weightsData
                     )
 
 train_preds <- predict(xgb_model, train_final, missing = NaN)
-rmse(train_complete$democrats_pct,train_preds)
-plot(train_complete$democrats_pct,train_preds)
+rmse(train_complete$dem_rep_ratio,train_preds)
+plot(train_complete$dem_rep_ratio,train_preds)
 
 test_preds <- predict(xgb_model, test_final, missing = NaN)
-rmse(test_complete$democrats_pct,test_preds)
-plot(test_complete$democrats_pct,test_preds)
+rmse(test_complete$dem_rep_ratio,test_preds)
+plot(test_complete$dem_rep_ratio,test_preds)
 
 # roll up to State level ----------------------------------------
 
 
-test_pred_df <- data.frame(fips = test_complete$fips, percent_dem =test_preds, percent_rep = 1-test_preds, 
-                           pop_estimate = test_complete$popestimate) %>% mutate(dem_vote = percent_dem * pop_estimate, 
-                                                                                rep_vote = percent_rep * pop_estimate) %>%
+test_pred_df <- data.frame(fips = test_complete$fips, dem_rep_ratio =test_preds,
+                           pop_estimate = test_complete$popestimate) %>%
+  mutate(dem_rep_ratio_votes = dem_rep_ratio * pop_estimate) %>%
   left_join(base_county_state_fips[c("stname","fips")], by="fips")
 
 #most of electoral college
 elect_rollup <- test_pred_df %>% left_join(elect_tbl, by = c("stname" ="state")) %>% 
-  group_by(stname) %>% summarize(total_dem_vote = sum(dem_vote),
-                                total_rep_vote = sum(rep_vote)) %>%
-  mutate(state_win=ifelse(total_dem_vote>total_rep_vote,1,0))
+  group_by(stname) %>% summarize(total_dem_rep_ratio_votes = sum(dem_rep_ratio_votes),
+                                total_pop = sum(pop_estimate)) %>%
+  mutate(state_win=ifelse(total_dem_rep_ratio_votes>total_pop,1,0))
 
 final_elect_rollup <- elect_rollup %>% 
   left_join(elect_tbl %>% 
@@ -133,11 +139,11 @@ final_elect_rollup <- elect_rollup %>%
 
 #maine and nebraska
 maine_neb$fips <- as.character(maine_neb$fips)
-elect_rollup_mn <- maine_neb %>% left_join(test_pred_df, by = "fips")
+elect_rollup_mn <- maine_neb %>% left_join(test_pred_df, by = c("fips","state"="stname"))
 elect_rollup_mn <- elect_rollup_mn[complete.cases(elect_rollup_mn), ] %>% 
-  group_by(congress_district) %>% summarize(total_dem_vote = sum(dem_vote),
-                                 total_rep_vote = sum(rep_vote)) %>%
-  mutate(state_win=ifelse(as.numeric(total_dem_vote)>as.numeric(total_rep_vote),1,0))
+  group_by(congress_district) %>% summarize(total_dem_rep_ratio_votes = sum(dem_rep_ratio_votes),
+                                            total_pop = sum(pop_estimate)) %>%
+  mutate(state_win=ifelse(as.numeric(total_dem_rep_ratio_votes)>as.numeric(total_pop),1,0))
 
 final_elect_rollup_mn <- elect_rollup_mn %>% 
   mutate(dem_electoral_votes = state_win,rep_electoral_votes = 1-dem_electoral_votes)

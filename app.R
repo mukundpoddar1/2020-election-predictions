@@ -18,34 +18,36 @@ library(usmap)
 dataset_2016 <- read.csv("data/merged_final_2016.csv")
 dataset_2020 <- read.csv("data/merged_final_2020.csv")
 
+# Load in predictions
+electoral_preds <- readRDS("data/electoral_college_predictions.rds")
+
+# Load in raw predictions
+load("data/raw_predictions.rda")
+rm(mlr_model, svm_model, xgb_model)
+
 #create list of countries for drop-down selection
 variable_choices <- setNames(names(dataset_2016),names(dataset_2016))
 
 # Create list of radio button choices
 map_choices <- c("State" = "states", "County" = "counties")
 
+# Model choices
+model_choices = c("Multiple Logistic Regression" = "mlr", "Support Vector Machine" = "svm", "XGBoost" = "xgb")
+
 # Function to calculate State categories from county percentages
-get_county <- function(df) {
-    df %>% 
-        mutate(outcome = ifelse(democrats_pct > republicans_pct, "Democrat", "Republican")) %>% 
+get_county <- function(df, model_pred) {
+    df %>% mutate(outcome = ifelse(df[model_pred] > 1, "Democrat", "Republican")) %>% 
         distinct(fips, outcome) %>% return()
 }
 
 
 get_state <- function(df) {
     df %>% 
-        mutate(state_fips = str_sub(str_sub(paste0("0",fips),-5), 1,2),
-               dem_pop = democrats_pct*popestimate,
-               rep_pop = republicans_pct*popestimate) %>%
-        group_by(state_fips) %>% 
-        summarize(
-            total_dems = sum(dem_pop, na.rm = T),
-            total_reps = sum(rep_pop, na.rm = T),
-            outcome = ifelse(total_dems > total_reps, "Democrat", "Republican"),
-            state_fips = as.numeric(state_fips)
+        mutate(
+            outcome = ifelse(state_win == 1, "Democrat", "Republican")
         ) %>% 
-        ungroup() %>% 
-        distinct(state_fips, outcome) %>% rename(fips = state_fips) %>% return()
+        distinct(state_fips, outcome) %>% 
+        rename(fips = state_fips) %>% return()
         
 }
 
@@ -125,37 +127,31 @@ ui <- navbarPage( title = "Can we predict the US Presidential Elections?",
                   
                 tabPanel("Results",
                          fluidRow(
-                             radioButtons("type","Electoral College or County-Level Results", choices = map_choices, selected = "states")
+                             radioButtons("type","Electoral College or County-Level Results", choices = map_choices, selected = "states"),selectInput("model", "Choose a model", choices = model_choices, selected = "Multiple Linear Regression")
+                             
                              ), # end fluidRow
-                         fluidRow(h3("Actual Results")),
                          fluidRow(
-                             column(6,
-                                    wellPanel("2016",
-                                        plotOutput("actual_2016")
-                                        ) # end wellPanel
-                                    ),
-                             column(6,
-                                    wellPanel("2020",
+                             column(1),
+                             column(5,
+                                    wellPanel("Actual Results 2020",
                                               plotOutput("actual_2020")
                                               )
-                                    ) # end column
-                         ), # end fluidRow
-                         fluidRow(h3("Predicted Results"),
-                                  selectInput("model", "Choose a model", choices = c("Logistic Regression", "Random Forest", "XGBoost", "Support Vector Machines"), selected = "Logistic Regression")
-                                  ),
-                         fluidRow(
-                             column(6,
-                                    wellPanel("2016",
-                                              plotOutput("predict_2016")
+                                    ), # end column
+                             column(5,
+                                    wellPanel("Predicted Results 2020",
+                                              plotOutput("predict_2020")
                                     ) # end wellPanel
                              ),
-                             column(6,
-                                    wellPanel("2020",
-                                              plotOutput("predict_2020")
-                                    )
-                             ) # end column
-                         ) # end fluidRow
-                         ) # end tabPanel
+                             column(1)
+                             ), # end fluidRow
+                         fluidRow(
+                            column(10,
+                                   wellPanel("Electoral Votes by Party",
+                                             tableOutput("electoral_votes")
+                                )
+                            )
+                        )
+                ) # end tabPanel
             
             
 ) #end of navbarPage
@@ -199,39 +195,40 @@ server <- function(input, output) {
     
 
 # MAP TAB ---------------------------------------------------------------
-    ## Get data sets
-    actual_2016 <- reactive({
+    actual_2020 <- reactive({
         if(input$type == "states") {
-            get_state(dataset_2016)
+            get_state(electoral_preds[["actual"]])
         } else {
-            get_county(dataset_2016)
+            get_county(test, "dem_rep_ratio")
         }
     })
     
-    actual_2020 <- reactive({
+    
+    ## Get data sets
+    pred_2020 <- reactive({
         if(input$type == "states") {
-            get_state(dataset_2020)
+            get_state(electoral_preds[[input$model]])
         } else {
-            get_county(dataset_2020)
+            get_county(test, input$model)
         }
     })
     
     # Create base map plots
-    actual_maps_2016 <- reactive(plot_usmap(regions = input$type, data = actual_2016(), values = "outcome"))
     actual_maps_2020 <- reactive(plot_usmap(regions = input$type, data = actual_2020(), values = "outcome"))
+    pred_maps_2020 <- reactive(plot_usmap(regions = input$type, data = pred_2020(), values = "outcome"))
     
 
     ## Plots
-    output$actual_2016 <- renderPlot({
-            actual_maps_2016() +
-            theme_bw()+
-            scale_fill_manual(name = "Winner", values = c("blue", "red")) +
-            theme(panel.grid.major = element_blank(),
-                  panel.background = element_blank(),
-                  axis.title = element_blank(),
-                  axis.text = element_blank(),
-                  axis.ticks = element_blank())
-    })
+    # output$actual_2016 <- renderPlot({
+    #         actual_maps_2016() +
+    #         theme_bw()+
+    #         scale_fill_manual(name = "Winner", values = c("blue", "red")) +
+    #         theme(panel.grid.major = element_blank(),
+    #               panel.background = element_blank(),
+    #               axis.title = element_blank(),
+    #               axis.text = element_blank(),
+    #               axis.ticks = element_blank())
+    # })
     
     output$actual_2020 <- renderPlot({
             actual_maps_2020() +
@@ -244,9 +241,20 @@ server <- function(input, output) {
                   axis.ticks = element_blank())
     })
     
-    ## Plots (replace with predicted data)
-    output$predict_2016 <- renderPlot({
-        actual_maps_2016() +
+    # ## Plots (replace with predicted data)
+    # output$predict_2016 <- renderPlot({
+    #     actual_maps_2016() +
+    #         theme_bw()+
+    #         scale_fill_manual(name = "Winner", values = c("blue", "red")) +
+    #         theme(panel.grid.major = element_blank(),
+    #               panel.background = element_blank(),
+    #               axis.title = element_blank(),
+    #               axis.text = element_blank(),
+    #               axis.ticks = element_blank())
+    # })
+    
+    output$predict_2020 <- renderPlot({
+        pred_maps_2020() +
             theme_bw()+
             scale_fill_manual(name = "Winner", values = c("blue", "red")) +
             theme(panel.grid.major = element_blank(),
@@ -256,15 +264,16 @@ server <- function(input, output) {
                   axis.ticks = element_blank())
     })
     
-    output$predict_2020 <- renderPlot({
-        actual_maps_2020() +
-            theme_bw()+
-            scale_fill_manual(name = "Winner", values = c("blue", "red")) +
-            theme(panel.grid.major = element_blank(),
-                  panel.background = element_blank(),
-                  axis.title = element_blank(),
-                  axis.text = element_blank(),
-                  axis.ticks = element_blank())
+    output$electoral_votes <- renderTable({
+        
+        model_electoral_votes <- colSums(electoral_preds[[input$model]][c("dem_electoral_votes","rep_electoral_votes")])
+        actual_electoral_votes <- colSums(electoral_preds[["actual"]][c("dem_electoral_votes","rep_electoral_votes")])
+        data.frame(model=c(input$model,"actual"),
+                   `Total Democratic Electoral Votes`=c(model_electoral_votes["dem_electoral_votes"],
+                                                        actual_electoral_votes["dem_electoral_votes"]),
+                   `Total Republican Electoral Votes`=c(model_electoral_votes["rep_electoral_votes"],
+                                                        actual_electoral_votes["rep_electoral_votes"])
+        )
     })
         
 }
