@@ -2,7 +2,7 @@ library(tidyverse)
 library(tidyr)
 
 # Loading in the dataframe
-df <- read_csv("data/Source Data/president_polls2020.csv")
+df <- read_csv("../../data/Source Data/president_polls2020.csv")
 
 # Grouping by state and party, taking the mean, median and standard deviation
 df_updated_mean <- df %>% group_by(state, candidate_party) %>%
@@ -34,4 +34,4 @@ df_polls_state <- gather(df_updated, calculation, values, poll_mean:poll_sd, fac
 df_polls_state <- df_polls_state[!(df_polls_state$state == 0),]
 
 # Writing file
-write.csv(df_polls_state, "data/Clean Data/clean_polls_2020.csv", row.names = FALSE)
+write.csv(df_polls_state, "../../data/Clean Data/clean_polls_2020.csv", row.names = FALSE)

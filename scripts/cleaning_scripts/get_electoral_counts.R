@@ -20,7 +20,7 @@ library(rvest)
 
 
 # LOAD BASE FILE ----------------------------------------------------------
-base <- read_csv("../data/Clean Data/base_county_state_fips_lkp.csv")
+base <- read_csv("../../data/Clean Data/base_county_state_fips_lkp.csv")
 
 # SCRAPE ELECTORAL COLLEGE ------------------------------------------------
 
@@ -82,7 +82,7 @@ maine_neb <- elect_tbl %>%
 
 names(maine_neb) <- c("state_fips", "state", "county", "stname", "ctyname", "fips")
 
-
+# Manually extracted from ballotpedia.com
 # Maine: 
 # 1st congressional - Cumberland, Knox, Lincoln, Sagadahoc, York, Kennebec
 # 2nd congressional - Androscoggin, Aroostook, Franklin, Hancock, Oxford, Penobscot, Piscataquis, Somerset, Waldo, Washington

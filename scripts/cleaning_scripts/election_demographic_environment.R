@@ -2,7 +2,7 @@ library(tidyverse)
 library(dplyr)
 
 # Reading data
-df <- read.csv2('data/Source Data/usa-2016-presidential-election-by-county.csv')
+df <- read.csv2('../../data/Source Data/usa-2016-presidential-election-by-county.csv')
 
 # Changing columns to numnerica and divding by 100 to get to 88% to .88
 df$Republicans.2016 <- as.numeric(df$Republicans.2016)/100
@@ -66,5 +66,5 @@ df_demographics_environment <- df1 %>%
     select(State, Fips, Less.Than.High.School.Diploma:precip)
 
 # Writing file 
-write.csv(df_election, "data/Clean Data/saul_cleaned/clean_election_results_2016.csv", row.names=FALSE)
-write.csv(df_demographics_environment,"data/Clean Data/saul_cleaned/uncertain_demographics_environment_2016.csv", row.names=FALSE)
+write.csv(df_election, "../../data/Clean Data/saul_cleaned/clean_election_results_2016.csv", row.names=FALSE)
+write.csv(df_demographics_environment,"../../data/Clean Data/saul_cleaned/uncertain_demographics_environment_2016.csv", row.names=FALSE)
