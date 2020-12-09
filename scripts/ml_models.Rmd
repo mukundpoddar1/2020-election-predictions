@@ -154,6 +154,106 @@ xgboost_rmse <- rmse(test$dem_rep_ratio,test$xgb)
 # plot(test$dem_rep_ratio,test_preds)
 ```  
 
+
+### Random Forest
+The model is utilizes decision trees, bagging, and randomness by randomly selected predetermined number of predictors at each node, for predictions.Here we use 10 fold cross validation repeated 3 times to determine predictions for a baseline model and different tuned random forest models. 
+```{r}
+# Combing scaled data with NON-SCALED RESPONSE VARIABLES
+train_scaled <- x_train %>% data.frame() %>% bind_cols(y_train)
+test_scaled <- x_test %>% data.frame() %>% bind_cols(y_test)
+
+# Getting number of predictors
+number_predictors <- dim(train_scaled)[2] - 1
+
+### Base model
+#Setting the default tuning parameters
+control <- trainControl(method='repeatedcv', number=10, repeats=3)
+mtry <- sqrt(number_predictors)
+tunegrid <- expand.grid(.mtry=mtry)
+
+# Initializing and fitting the random forest
+rf_model_base <- train(actual ~ ., data = train_scaled, method = 'rf',
+                      metric='RMSE', tuneGrid=tunegrid, trControl = control)
+
+## Getting results into a dataframe
+# df <- data.frame(preds_rf_base, train_scaled$actual)
+# 
+# # Plotting the results
+# df %>% ggplot(aes(preds_rf_base, train_scaled.actual))+
+#     geom_point() +
+#     geom_abline(intercept=0, slope = 1, color = 'red') +
+#     ggtitle("Base Validation Analysis") +
+#     xlab("Predictions from Base Model") +
+#     ylab("Acual Validation Ratios")
+# 
+
+
+
+```
+
+
+```{r}
+### Tuning Method 1
+control <- trainControl(method='repeatedcv', number=10, repeats=3)
+tunegrid_tune <- expand.grid(.mtry= c(sqrt(number_predictors), log2(number_predictors), number_predictors/3))
+# Initializing and fitting the random forest
+rf_model_tuned1 <- train(actual ~ ., data = train_scaled, method = 'rf',
+                       metric='RMSE', tuneGrid=tunegrid_tune, trControl = control)
+
+```
+
+
+```{r, eval=FALSE}
+
+### Tuning Method 2: Manual Search
+control <- trainControl(method="repeatedcv", number=10, repeats=3, search="grid")
+tunegrid_tune <- expand.grid(.mtry= c(sqrt(number_predictors), log2(number_predictors), number_predictors/3))
+modellist_new <- list()
+seed <- 42
+
+for (ntree in c(seq(40,600, 80))) {
+    for (nodesize in c(10, 30, 60, 90)) {
+
+    print(paste(ntree, nodesize))
+
+    set.seed(seed)
+    fit <- train(actual ~ ., data = train_scaled, method = 'rf',
+                 metric='RMSE', tuneGrid=tunegrid_tune, trControl = control, ntree=ntree, nodesize=nodesize)
+    key <- toString(ntree)
+    modellist_new[[key]] <- fit
+    }
+}
+# compare results
+
+
+```
+
+
+
+```{r}
+# Reading results and model from manual search
+modellist_new <- readRDS("../saved_models/model_list_final.rds")
+results <- readRDS("../saved_models/results_rf_final.rds")
+results <- resamples(modellist_new)
+
+# Comparing the different models
+rf_model_base
+rf_model_tuned1
+summary(results)
+dotplot(results)
+```
+
+
+As we can see, rd_model_tuned1 performs the best with mtry=p/3. We shall use this model to predict on the test set.
+
+```{r}
+# Predicting using best model on test set and saving predictions and errors to their respecitive dataframes
+test$rf <- predict(rf_model_tuned1, newdata = test_scaled)
+rf_rmse <- rmse(test_scaled$actual,test$rf)
+```
+
+
+
 ```{r, echo = F}
 # Save out predictions so we don't run code multiple times
 #save(mlr_model, svm_model, xgb_model, test, file = "../data/raw_predictions.rda")
