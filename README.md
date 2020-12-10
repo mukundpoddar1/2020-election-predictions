@@ -21,7 +21,7 @@ An attempt to predict the 2020 US Presidential Elections
     
     * Cleaned file: _usa-2016-presidential-election-by-county.csv_ 
     * Source: https://public.opendatasoft.com/explore/dataset/usa-2016-presidential-election-by-county/table/?disjunctive.state
-    * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/election_demographic_environment.R)
+    * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/cleaning_scripts/election_demographic_environment.R)
 
 2. Election results from the 2020 election 
 
@@ -45,26 +45,26 @@ An attempt to predict the 2020 US Presidential Elections
 
     * Cleaned file: _president_general_polls_2016.csv_
     * Source: https://projects.fivethirtyeight.com/2016-election-forecast/national-polls/
-    * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/polling_data_2016.R)    
+    * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/cleaning_scripts/polling_data_2016.R)    
     
 2. Polling data from 2020 polls. Contains only raw polling data.  
 
     * Cleaned file: _president_polls2020.csv_
     * Source: https://projects.fivethirtyeight.com/polls/
-    * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/polling_2020.R)  
+    * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/cleaning_scripts/polling_2020.R)  
 
 **Electoral College**
 1. Electoral College vote breakout by state
 
     * Cleaned file: _electoral_college.csv_
     * Source: https://www.britannica.com/topic/United-States-Electoral-College-Votes-by-State-1787124
-    * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/get_electoral_counts.R)  
+    * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/cleaning_scripts/get_electoral_counts.R)  
     
 2. Maine and Nebraska electoral votes. Vote breakout was obtained by manually mapping counties to congressional districts using descriptions on Ballotpedia
 
     * Cleaned file: _electoral_votes_main_nebraska.csv_
     * Source: https://ballotpedia.org/
-    * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/get_electoral_counts.R)  
+    * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/cleaning_scripts/get_electoral_counts.R)  
 
 **Economic Data**
 1. Consumer spending data
@@ -80,7 +80,7 @@ An attempt to predict the 2020 US Presidential Elections
 3. Unemployment
     * Cleaned files: _unemployment_2016.csv_, _unemployment_2020.csv_
     * Source: https://apps.urban.org/features/state-economic-monitor/
-    * [Data cleaning script](https://apps.urban.org/features/state-economic-monitor/)
+    * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/cleaning_scripts/unemployment_cleaner.R)
 
 4. Campaign Finance
     * Cleaned files: _campaign_raised_2016.csv_, _campaign_raised_2020.csv_
@@ -107,22 +107,22 @@ race_black | Black or African American alone population (normalized using popest
 race_hispanic | Hispanic population (normalized using popestimate)
 race_aac | Asian alone or in combination population (normalized using popestimate)
 age_x_to_y_years | Estimated population in x to y age group (normalized using popestimate)  
-financial.services.and.insurance | Consumer spending
-gasoline.and.other.energy.goods | Consumer spending
-health.care | Consumer spending
-other.nondurable.goods | Consumer spending
-personal.consumption.expenditures | Consumer spending
-food | Consumer spending
-household | Consumer spending
-nonprofit | Consumer spending
-nondurable_goods | Consumer spending
-durable_goods | Consumer spending
-goods_clothing_footwear | Consumer spending
-services | Consumer spending
-recreation | Consumer spending
-transportation | Consumer spending
+financial.services.and.insurance | Consumer Spending (Financial Services and Insurance)
+gasoline.and.other.energy.goods | Consumer Spending (Gasoline and other Energy Goods)
+health.care | Consumer Spending (Health Care)
+other.nondurable.goods | Consumer Spending (Other Nondurable Goods)
+personal.consumption.expenditures | Consumer Spending (Personal Consumption Expenditures)
+food | Consumer Spending (Food)
+household | Consumer Spending (Household)
+nonprofit | Consumer Spending (Non Profit)
+nondurable_goods | Consumer Spending (Nondurable Goods)
+durable_goods | Consumer Spending (Durable Goods)
+goods_clothing_footwear | Consumer Spending (Goods, Clothing, Footwear)
+services | Consumer Spending (Services)
+recreation | Consumer Spending (Recreation)
+transportation | Consumer Spending (Transportation)
 raw_gdp | GDP per county
-gdp_change | GDP change
+gdp_change | GDP change per county
 unemployment | Unemployment by county
 dem_poll_mean | Percentage polled for Democrat candidate; mean (by state)
 dem_poll_median | Percentage polled for Democrat candidate; median (by state)
