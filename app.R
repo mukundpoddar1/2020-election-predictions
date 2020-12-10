@@ -18,6 +18,15 @@ library(usmap)
 dataset_2016 <- read.csv("data/merged_final_2016.csv")
 dataset_2020 <- read.csv("data/merged_final_2020.csv")
 
+#read in dataset for 2016 election returns
+election_returns_2016 <- read.csv("data/Source Data/election_returns_2012_2016.csv")
+
+#read in 2020 election returns % Biden, % Trump, population
+election_returns_2020<- read.csv("data/Clean Data/election_results_2020_population_percent.csv")
+
+#read in covid results
+covid_data <- read.csv("data/COVID/covid_data.csv")
+
 # Load in predictions
 electoral_preds <- readRDS("data/electoral_college_predictions.rds")
 
@@ -37,6 +46,39 @@ geocodes <- geocodes %>%
 geocodes <- geocodes %>% 
     fill(region, .direction = "down")
 
+
+#Dataset for voter turnout/population to assess proxy of population for voter turnout (which we mutiply by the ratio of democrats/republican votes for each county)
+turnout_pop_2016 <- election_returns_2016 %>% filter(year==2016) %>%
+    select(FIPS, totalvotes) %>%
+    left_join(dataset_2016 %>% select(fips, popestimate),by=c("FIPS"="fips")) %>%
+    mutate(turnout_population_ratio = totalvotes/popestimate)
+
+#reformat 2020 election returns to get democratic/republic vote ratio by state
+election_returns_totals_2020 <- election_returns_2020 %>% select(state, COUNTY, BIDEN, TRUMP, POPULATION) %>% mutate(biden_votes = BIDEN*POPULATION, trump_votes =TRUMP*POPULATION)
+state_ratio_2020 <- election_returns_totals_2020 %>% group_by(state) %>% summarise(vote_ratio = sum(biden_votes,na.rm = TRUE)/sum(trump_votes,na.rm = TRUE), .groups = 'drop')
+
+#manually calculate RAtio for  
+#Taken from: https://www.nytimes.com/interactive/2020/11/03/us/elections/results-president.html
+arizona_ratio <- 49.36/49.06 
+colorado_ratio <- 55.4/41.9
+new_mexico_ratio <- 54.3/43.5
+wyoming_ratio <- 69.9/26.6
+alaska_ratio <- 52.8/42.8
+
+state_ratio_2020$vote_ratio[which(state_ratio_2020$state=="Arizona")] <- arizona_ratio
+state_ratio_2020$vote_ratio[which(state_ratio_2020$state=="Colorado")] <- colorado_ratio
+state_ratio_2020$vote_ratio[which(state_ratio_2020$state=="New Mexico")] <- new_mexico_ratio
+state_ratio_2020$vote_ratio[which(state_ratio_2020$state=="Wyoming")] <- wyoming_ratio
+state_ratio_2020 <- rbind(state_ratio_2020, data.frame(state="Alaska", vote_ratio=alaska_ratio))
+
+#roll up covid data to state level
+state_covid <- covid_data %>% group_by(state) %>% 
+    summarise(total_population = sum(population), total_cases = sum(X..total.covid.cases), cases_per_100k = total_cases/total_population*100000, .groups='drop')
+
+#combine 2020 election returns and covid data to compare how elections went with covid case counts for each state
+vote_ratio_covid <- state_ratio_2020 %>% left_join(state_covid %>% select(state, cases_per_100k), by = "state")
+vote_ratio_covid$vote_color <- ifelse(vote_ratio_covid$vote_ratio>1,"blue","red")
+vote_ratio_covid <- vote_ratio_covid[complete.cases(vote_ratio_covid),]  #DC was removed
 
 #create list of countries for drop-down selection
 var_names <- c("FIPS", "Campaign Funds (Democrat)", "Campaign Funds (Republican)",
@@ -145,12 +187,17 @@ ui <- navbarPage( title = "Can we predict the US Presidential Elections?",
                                                   selected = "unemployment")
                                ) #end of column
                            ), # end of fluidRow 
-                           fluidRow(
+                           fluidRow( 
                                column(6,
-                                      plotOutput("hist")
+                                      plotOutput("hist") #histogram to see distribution of selected variable in 2016
                                ),
                                column(6,
-                                      plotOutput("hist_2")
+                                      plotOutput("hist_2") #histogram to see distribution of selected variable in 2020
+                               ),
+                           ),
+                           fluidRow(
+                               column(8,
+                                      plotOutput("hist_3") #histogram to see distribution of voter turnout/population for 2016
                                ),
                            )
                   ), # end of EDA tab panel
@@ -209,7 +256,24 @@ ui <- navbarPage( title = "Can we predict the US Presidential Elections?",
                                              tableOutput("electoral_votes")
                                 )
                             )
-                        )
+                        ),
+                        fluidRow(
+                            column(7,
+                                   wellPanel("2020 Democratic %/Republican % Ratio vs Covid Cases Per 100K (click on point to see state info)",
+                                             plotOutput("covid_elections",
+                                                        click="scatterPlot_click"
+                                                        )
+                                             ), # end wellPanel
+                            ) #end column
+                        ), #end fluidRow
+                        #create point click to get more info on a point
+                        fluidRow(
+                            column(width=6,
+                                   h4("Points near click"),
+                                   verbatimTextOutput("click_info")
+                            ) #end of column  
+                        ) #end of fluidRow
+                        
                 ) # end tabPanel
             
             
@@ -269,6 +333,16 @@ server <- function(input, output) {
             theme(axis.text.x = element_text(angle = 90, hjust = 1))+
             ggtitle("2020 histogram")
     })
+
+    output$hist_3 <-renderPlot({
+        ggplot(turnout_pop_2016, aes(turnout_population_ratio))+
+            geom_histogram(fill="green", color = "grey")+
+            xlab("Voter Turnout/Population") +
+            ylab("Count") +
+            theme_bw() +
+            theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+            ggtitle("Distribution of 2016 Voter Turnout/Population by County")
+    })
     
 
 # MAP TAB ---------------------------------------------------------------
@@ -318,6 +392,23 @@ server <- function(input, output) {
                   axis.text = element_blank(),
                   axis.ticks = element_blank())
     })
+    
+    output$covid_elections <- renderPlot({
+        ggplot(vote_ratio_covid, aes(x=cases_per_100k, y=vote_ratio))+
+            geom_point(aes(colour=vote_color), size = 4)+scale_color_manual(values = c("blue", "red"))+
+            xlab("State") +
+            ylab("% dem/% rep votes ratio") +
+            ylim(0,3)+
+            theme_bw() +
+            theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+            theme(legend.position = "none")
+    })
+    
+    #shows state, dem/rep ratio, and covid cases / 100K for all points near the click
+    output$click_info <- renderPrint({
+        nearPoints(vote_ratio_covid %>% .[,c("state","cases_per_100k","vote_ratio")],
+                   input$scatterPlot_click, addDist = FALSE)
+    }) #end of renderPrint
     
     output$electoral_votes <- renderTable({
         
