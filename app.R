@@ -175,12 +175,12 @@ server <- function(input, output) {
 
     output$Corr_matrix <- renderPlot({
         corrplot(cor(select(dataset_2016,contains(input$corr)),
-                     use = "pairwise.complete.obs"),method="number",title="2016 Correlation Matrix",mar=c(0,0,2,0),col=col4(10))
+                     use = "pairwise.complete.obs"),method="number",title="2016 Correlation Matrix",mar=c(0,0,2,0),col=col4(10),number.cex=0.50)
     })
     
     output$Corr_matrix_2 <- renderPlot({
         corrplot(cor(select(dataset_2020,contains(input$corr)),
-                     use = "pairwise.complete.obs"),method="number",title="2020 Correlation Matrix",mar=c(0,0,2,0),col=col4(10))
+                     use = "pairwise.complete.obs"),method="number",title="2020 Correlation Matrix",mar=c(0,0,2,0),col=col4(10),number.cex=0.50)
     })
     
     output$hist <-renderPlot({

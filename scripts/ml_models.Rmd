@@ -76,22 +76,20 @@ This model is an optimized distributed gradient boosting library, which produces
 ```{r xgboost, eval = F}
 train_final <- matrix(as.numeric(data.matrix(x_train)), nrow = nrow(train))
 test_final <- matrix(as.numeric(data.matrix(x_test)), nrow = nrow(test))
-#train_party_outcome <- ifelse(train_complete$democrats_pct>train_complete$republicans_pct,1,0)
+
 train_party_outcome <- train$dem_rep_ratio
 train_outcome <- matrix(as.numeric(data.matrix(train_party_outcome)))
 
 # GRID SEARCH -------------------------------------------------------------------------------
 #https://www.kaggle.com/silverstone1903/xgboost-grid-search-r
 
-searchGridSubCol <- expand.grid(subsample = c(0.5,0.7,1), 
-                                colsample_bytree = c(0.5,0.7,1),
-                                max_depth = c(3,4,5,6),
-                                eta = c(0.1,0.2,0.3,0.4)
+searchGridSubCol <- expand.grid(subsample = c(0.6,0.75,0.9,1), 
+                                colsample_bytree = c(0.5,0.6,0.8,1),
+                                max_depth = c(3,4,5,6,7,8,9,10),
+                                eta = c(0.001,0.01,0.1,0.2,0.3,0.4)
 )
 
 obj<- "reg:squarederror"
-
-weightsData <- scales::rescale(train$popestimate, to=c(0,1))
 
 system.time(
   rmseErrorsHyperparameters <- apply(searchGridSubCol, 1, function(parameterList){
@@ -105,8 +103,8 @@ system.time(
     xgb_model <- xgboost(data =  x_train, label=train_outcome, nrounds = 200, 
                          verbose = 0,"max.depth" = currentDepth, "eta" = currentEta,                               
                          "subsample" = currentSubsampleRate, "colsample_bytree" = currentColsampleRate
-                         , print_every_n = 20, "min_child_weight" = 1,
-                         early_stopping_rounds = 20,objective=obj, eval_metric="rmse", weight = weightsData
+                         , print_every_n = 20, "min_child_weight" = currentMinChild,
+                         early_stopping_rounds = 20,objective=obj, eval_metric="rmse"
                          )
     
     xvalidationScores <- as.data.frame(xgb_model$evaluation_log)
@@ -118,33 +116,27 @@ varnames <- c("TrainRMSE", "SubSampRate", "ColSampRate", "Depth","eta","currentM
 names(output) <- varnames
 head(output)
 best_params <- output[which.min(output$TrainRMSE),]
-best_params
-# -----------------------------------------------------------------------------------------------
+best_params #SubSampRate - 0.6, ColSampRate=1, depth=10, eta= 0.4,currentMinChild=1
+
+# TRAINING XGBOOST MODEL-----------------------------------------------------------------------------------------------
 
 #https://xgboost.readthedocs.io/en/latest/parameter.html
-xgb_model = xgboost(data=x_train, 
-                    label=train_outcome, 
+xgb_model = xgboost(data=x_train,
+                    label=train_outcome,
                     missing = NaN,
                     nrounds=200,
-                    verbose=0, 
-                    eta=best_params$eta, 
-                    max_depth=best_params$Depth, 
-                    subsample=best_params$SubSampRate, 
-                    min_child=best_params$currentMinChild,
+                    verbose=0,
+                    eta=best_params$eta,
+                    max_depth=best_params$Depth,
+                    subsample=best_params$SubSampRate,
+                    min_child_weight=1,
                     colsample_bytree=best_params$ColSampRate,
-                    objective=obj, 
+                    objective=obj,
                     eval_metric="rmse",
-                    weight = weightsData
                     )
 
-# train_preds <- predict(xgb_model, x_train, missing = NaN)
-# rmse(train$dem_rep_ratio,train_preds)
-# plot(train$dem_rep_ratio,train_preds)
-
-# test_preds <- predict(xgb_model, x_test, missing = NaN)
 test$xgb <- predict(xgb_model, test_final, missing = NaN)
 xgboost_rmse <- rmse(test$dem_rep_ratio,test$xgb)
-# plot(test$dem_rep_ratio,test_preds)
 ```  
 
 ```{r, echo = F}
@@ -153,14 +145,12 @@ xgboost_rmse <- rmse(test$dem_rep_ratio,test$xgb)
 load("../data/raw_predictions.rda")
 ```
 
- 
-
 ### Outcomes
 
 #### Predict Electoral College Split
 
-```{r}
-# electoral college
+```{r, message = FALSE}
+# electoral college; note: Maine and Nebraska have Congressional District splits, so the roll-up is separated there 
 elect_tbl <- read_csv("../data/electoral_college.csv")
 maine_neb <- read_csv("../data/electoral_votes_main_nebraska.csv")
 
@@ -296,10 +286,10 @@ saveRDS(electoral_college_predictions, "../data/electoral_college_predictions.rd
 
 ```
 
-```{r electoral_college_results}
+```{r electoral_college_results, message = FALSE}
 electoral_college_predictions <- readRDS("../data/electoral_college_predictions.rds")
 
-# Create a data frame of total ellectoral college prediction
+# Create a data frame of total electoral college prediction
 mlr_total <- electoral_college_predictions$mlr[c("dem_electoral_votes","rep_electoral_votes")] %>% colSums()
 svm_total <- electoral_college_predictions$svm[c("dem_electoral_votes","rep_electoral_votes")] %>% colSums()
 xgb_total <- electoral_college_predictions$xgb[c("dem_electoral_votes","rep_electoral_votes")] %>% colSums()
@@ -317,7 +307,7 @@ data.frame(
 
 ### Error Metrics  
 
-We want to now look at the metrics for all the models used. For now we just visualise the predictions against the actual outcomes, and we will fill more here in due time.
+We want to now look at the metrics for all the models used. For now we just visualize the predictions against the actual outcomes, and we will fill more here in due time.
 
 
 ```{r visualisation}

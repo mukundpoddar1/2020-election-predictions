@@ -175,8 +175,8 @@ library(corrplot)
 correlation_18 <- subset(consumption_18_per_capita, select = -c(fips))
 correlation_16 <- subset(consumption_16_per_capita, select = -c(fips))
 
-corrplot(cor(correlation_18, use = "pairwise.complete.obs"),method="number")
-corrplot(cor(correlation_16, use = "pairwise.complete.obs"),method="number")
+corrplot(cor(correlation_18, use = "pairwise.complete.obs"),method="number", number.cex=0.50)
+corrplot(cor(correlation_16, use = "pairwise.complete.obs"),method="number",number.cex=0.50)
 
 #Combine all consumer spending if needed
 # consumption_16_final <- data.frame(fips=consumption_16$fips,consumer_exp=
