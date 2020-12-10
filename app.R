@@ -25,8 +25,38 @@ electoral_preds <- readRDS("data/electoral_college_predictions.rds")
 load("data/raw_predictions.rda")
 rm(mlr_model, svm_model, xgb_model)
 
+# Region information
+geocodes <- readxl::read_excel("data/Source Data/state-geocodes-v2017.xlsx", skip= 5)
+# Create division field
+geocodes$division <- ifelse(str_detect(geocodes$Name, "Division"), geocodes$Name, NA)
+geocodes$region <- ifelse(str_detect(geocodes$Name, "Region"), geocodes$Name, NA)
+
+geocodes <- geocodes %>% 
+    fill(division, .direction = "down")
+
+geocodes <- geocodes %>% 
+    fill(region, .direction = "down")
+
+
 #create list of countries for drop-down selection
-variable_choices <- setNames(names(dataset_2016),names(dataset_2016))
+var_names <- c("FIPS", "Campaign Funds (Democrat)", "Campaign Funds (Republican)",
+               "Population estimate", "Net Migration", "Race (White)", 
+               "Race (Black)", "Race (Hispanic)", "Race (Asian)",
+               "Age (0-19 years)", "Age (20-39 years)", "Age (40-59 years)",
+               "Age (60-79 years)", "Age (80 years or older)", "Consumer Spending (Financial Services and Insurance)",
+               "Consumer Spending (Gasoline and other Energy Goods)", 
+               "Consumer Spending (Health Care)", "Consumer Spending (Other Nondurable Goods)",
+               "Consumer Spending (Personal Consumption Expenditures)",
+               "Consumer Spending (Food)", "Consumer Spending (Household)",
+               "Consumer Spending (Non Profit)", "Consumer Spending (Nondurable Goods)",
+               "Consumer Spending (Durable Goods)", "Consumer Spending (Goods, Clothing, Footwear)",
+               "Consumer Spending (Services)", "Consumer Spending (Recreation)",
+               "Consumer Spending (Transportation)", "Raw GDP", "GDP change",
+               "Unemployment", "Mean Poll Outcome (Democrats)", "Median Poll Outcome (Democrats)",
+               "Standard Deviation Poll Outcome (Democrats)", "Mean Poll Outcome (Republicans)", 
+               "Median Poll Outcome (Republicans)", "Standard Deviation Poll Outcome (Republicans)",
+               "Election Returns Consistency (Democrats)", "Election Returns Consistency (Republicans)", "Ratio of % Votes for Democrats to % Votes for Republicans") 
+variable_choices <- setNames(names(dataset_2016), var_names)
 
 # Create list of radio button choices
 map_choices <- c("State" = "states", "County" = "counties")
@@ -61,19 +91,19 @@ ui <- navbarPage( title = "Can we predict the US Presidential Elections?",
                            fluidRow(
                                # first column: explanatory text
                                column(3,
-                                      p("explore the relationship between 2 variables in the election dataset"),
+                                      p("Explore the relationship between 2 variables in our election dataset"),
                                       br()
                                ), # end of first column
                                
                                # 2nd column: dropdown menu to select variable 1
                                column(3,
                                       selectInput(inputId = "variable_1", label = "Choose a variable:",
-                                                  choices = variable_choices)
+                                                  choices = variable_choices, selected = "race_black")
                                ), # end of second column 
                                # 3nd column: dropdown menu to select variable 2
                                column(3,
                                       selectInput(inputId = "variable_2", label = "Choose a variable:",
-                                                  choices = variable_choices)
+                                                  choices = variable_choices, selected = "dem_rep_ratio")
                                ), # end of third column
                                
                            ), # end of fluidRow
@@ -125,6 +155,35 @@ ui <- navbarPage( title = "Can we predict the US Presidential Elections?",
                            )
                   ), # end of EDA tab panel
                   
+                  # Extra viz tab (we can move this around)
+                  tabPanel("Viz",
+                           fluidRow(
+                               column(3,
+                                      selectInput(inputId = "variable_box", label = "Choose a variable:",
+                                                  choices = variable_choices, selected = "race_black")
+                               )
+                           ),
+                           fluidRow(
+                               column(1),
+                               column(10,
+                                      wellPanel("2016",
+                                                plotOutput("boxplot_16")
+                                                )
+                                      ),
+                               column(1)
+                           ),
+                           fluidRow(
+                               column(1),
+                               column(10,
+                                      wellPanel("2020",
+                                                plotOutput("boxplot_20")
+                                                )
+                               ),
+                               column(1)
+                           )
+                           
+                           ),
+                  
                 tabPanel("Results",
                          fluidRow(
                              radioButtons("type","Electoral College or County-Level Results", choices = map_choices, selected = "states"),selectInput("model", "Choose a model", choices = model_choices, selected = "Multiple Linear Regression")
@@ -165,12 +224,20 @@ server <- function(input, output) {
     #scatterplot plot for 2 variables for 2016 and 2020
     output$scatterPlot <- renderPlot({
         ggplot(dataset_2016, aes_string(x = input$variable_1, y = input$variable_2)) +
-            geom_point(colour="red")+ggtitle("2016 scatterplot")
+            geom_point(colour="red")+
+            xlab(names(variable_choices)[which(variable_choices == input$variable_1)]) +
+            ylab(names(variable_choices)[which(variable_choices == input$variable_2)]) +
+            ggtitle("2016 scatterplot") +
+            theme_bw()
     }) # end of renderPlot
     
     output$scatterPlot2 <- renderPlot({
         ggplot(dataset_2020, aes_string(x = input$variable_1, y = input$variable_2)) +
-            geom_point(colour="blue")+ggtitle("2020 scatterplot")
+            xlab(names(variable_choices)[which(variable_choices == input$variable_1)]) +
+            ylab(names(variable_choices)[which(variable_choices == input$variable_2)]) +
+            geom_point(colour="blue")+
+            ggtitle("2020 scatterplot") +
+            theme_bw()
     }) # end of renderPlot
 
     output$Corr_matrix <- renderPlot({
@@ -184,13 +251,23 @@ server <- function(input, output) {
     })
     
     output$hist <-renderPlot({
-        ggplot(dataset_2016, aes_string(input$hist_selection))+geom_histogram(fill="red")+
-            theme(axis.text.x = element_text(angle = 90, hjust = 1))+ggtitle("2016 histogram")
+        ggplot(dataset_2016, aes_string(input$hist_selection))+
+            geom_histogram(fill="red", color = "grey")+
+            xlab(names(variable_choices)[which(variable_choices == input$hist_selection)]) +
+            ylab("Count") +
+            theme_bw() +
+            theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+            ggtitle("2016 histogram")
     })
     
     output$hist_2 <-renderPlot({
-        ggplot(dataset_2020, aes_string(input$hist_selection))+geom_histogram(fill="blue")+
-            theme(axis.text.x = element_text(angle = 90, hjust = 1))+ggtitle("2020 histogram")
+        ggplot(dataset_2020, aes_string(input$hist_selection))+
+            geom_histogram(fill="blue", color = "grey")+
+            xlab(names(variable_choices)[which(variable_choices == input$hist_selection)]) +
+            ylab("Count") +
+            theme_bw() +
+            theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+            ggtitle("2020 histogram")
     })
     
 
@@ -219,17 +296,6 @@ server <- function(input, output) {
     
 
     ## Plots
-    # output$actual_2016 <- renderPlot({
-    #         actual_maps_2016() +
-    #         theme_bw()+
-    #         scale_fill_manual(name = "Winner", values = c("blue", "red")) +
-    #         theme(panel.grid.major = element_blank(),
-    #               panel.background = element_blank(),
-    #               axis.title = element_blank(),
-    #               axis.text = element_blank(),
-    #               axis.ticks = element_blank())
-    # })
-    
     output$actual_2020 <- renderPlot({
             actual_maps_2020() +
             theme_bw()+
@@ -241,17 +307,6 @@ server <- function(input, output) {
                   axis.ticks = element_blank())
     })
     
-    # ## Plots (replace with predicted data)
-    # output$predict_2016 <- renderPlot({
-    #     actual_maps_2016() +
-    #         theme_bw()+
-    #         scale_fill_manual(name = "Winner", values = c("blue", "red")) +
-    #         theme(panel.grid.major = element_blank(),
-    #               panel.background = element_blank(),
-    #               axis.title = element_blank(),
-    #               axis.text = element_blank(),
-    #               axis.ticks = element_blank())
-    # })
     
     output$predict_2020 <- renderPlot({
         pred_maps_2020() +
@@ -274,6 +329,43 @@ server <- function(input, output) {
                    `Total Republican Electoral Votes`=c(model_electoral_votes["rep_electoral_votes"],
                                                         actual_electoral_votes["rep_electoral_votes"])
         )
+    })
+    
+    # Box plots
+    output$boxplot_16 <- renderPlot({
+        # Add on region
+        e_16 <- dataset_2016 %>% 
+            mutate(state_fips = str_sub(fips, 1,2)) %>% 
+            left_join(geocodes %>% select(`State (FIPS)`, region), by = c("state_fips" = "State (FIPS)"))
+        
+        # Plot
+        e_16 %>% 
+            ggplot(aes_string(x = "state_fips", y = input$variable_box, fill = "region")) +
+            scale_y_log10() +
+            geom_boxplot() +
+            xlab("State") +
+            ylab(names(variable_choices)[which(variable_choices == input$bariable_box)]) + 
+            theme_bw() +
+            theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+        
+    })
+    
+    output$boxplot_20 <- renderPlot({
+        # Add on region
+        e_20 <- dataset_2020 %>% 
+            mutate(state_fips = str_sub(fips, 1,2)) %>% 
+            left_join(geocodes %>% select(`State (FIPS)`, region), by = c("state_fips" = "State (FIPS)"))
+        
+        # Plot
+        e_20 %>% 
+            ggplot(aes_string(x = "state_fips", y = input$variable_box, fill = "region")) +
+            scale_y_log10() +
+            geom_boxplot() +
+            xlab("State") +
+            ylab(names(variable_choices)[which(variable_choices == input$variable_box)]) + 
+            theme_bw() +
+            theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+        
     })
         
 }
