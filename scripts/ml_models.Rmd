@@ -49,16 +49,24 @@ We selected a subset of our covariates for this model using a backwards stepwise
 x_train_mlr <- x_train %>% data.frame() %>% bind_cols(y_train)
 x_test_mlr <- x_test %>% data.frame() %>% bind_cols(y_test)
 # Fit model with backwards selected variables
-covs <- names(x_train)[-length(names(x_train))]
+covs <- names(x_train_mlr)[-length(names(x_train_mlr))]
 covs <- paste0(covs, collapse = " + ")
 
-mlr_model <- lm(actual ~ popestimate + race_white + race_black + 
-    race_hispanic + race_aac + age_0_to_19_years + age_20_to_39_years + 
-    age_40_to_59_years + nonprofit + nondurable_goods + raw_gdp + 
-    gdp_change + unemployment + dem_poll_median + dem_poll_sd + 
-    rep_poll_mean + rep_poll_median + rep_poll_sd + consistency_dem, data = x_train_mlr)
-
-test$mlr = predict(mlr_model, x_test_mlr)
+# Generate a full model using log transform to make LINE assumptions more satisfied
+mlr_full_model <- lm(eval(paste0("log(actual) ~ ", covs)), data = x_train_mlr)
+# Perform backwards stepwise selection to remove insignificant predictors
+step(mlr_full_model, direction = "back")
+# Create final model statement (has variables from each)
+mlr_model <- lm( log(actual) ~ dem_amount + rep_amount + popestimate + 
+    netmig + race_white + race_black + race_hispanic + race_aac + 
+    age_0_to_19_years + age_20_to_39_years + age_40_to_59_years + 
+    age_60_to_79_years + financial.services.and.insurance + gasoline.and.other.energy.goods + 
+    health.care + food + nonprofit + nondurable_goods + gdp_change + 
+    unemployment + dem_poll_mean + dem_poll_median + dem_poll_sd + 
+    rep_poll_mean + rep_poll_sd + consistency_dem + consistency_rep, 
+    data = x_train_mlr)
+# Save out exponentiated predictions
+test$mlr = exp(predict(mlr_model, x_test_mlr))
 ```
 
 
@@ -141,7 +149,7 @@ xgboost_rmse <- rmse(test$dem_rep_ratio,test$xgb)
 
 ```{r, echo = F}
 # Save out predictions so we don't run code multiple times
-#save(mlr_model, svm_model, xgb_model, test, file = "../data/raw_predictions.rda")
+# save(mlr_model, svm_model, xgb_model, test, file = "../data/raw_predictions.rda")
 load("../data/raw_predictions.rda")
 ```
 
