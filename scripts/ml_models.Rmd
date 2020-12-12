@@ -156,7 +156,7 @@ xgboost_rmse <- rmse(test$dem_rep_ratio,test$xgb)
 
 
 ### Random Forest
-The model is utilizes decision trees, bagging, and randomness by randomly selected predetermined number of predictors at each node, for predictions.Here we use 10 fold cross validation repeated 3 times to determine predictions for a baseline model and different tuned random forest models. 
+The model is utilizes decision trees, bagging, and randomness by randomly selected predetermined number of predictors at each node, for predictions. Using 10 fold cross validation repeated 3 times and after determining a baseline model, we attempt to tune the model with Caret's in built grid search tuning method and with manual grid search. In the end, the model that uses Caret's grid search is the strongest model. 
 ```{r}
 # Combing scaled data with NON-SCALED RESPONSE VARIABLES
 train_scaled <- x_train %>% data.frame() %>% bind_cols(y_train)
@@ -175,25 +175,7 @@ tunegrid <- expand.grid(.mtry=mtry)
 rf_model_base <- train(actual ~ ., data = train_scaled, method = 'rf',
                       metric='RMSE', tuneGrid=tunegrid, trControl = control)
 
-## Getting results into a dataframe
-# df <- data.frame(preds_rf_base, train_scaled$actual)
-# 
-# # Plotting the results
-# df %>% ggplot(aes(preds_rf_base, train_scaled.actual))+
-#     geom_point() +
-#     geom_abline(intercept=0, slope = 1, color = 'red') +
-#     ggtitle("Base Validation Analysis") +
-#     xlab("Predictions from Base Model") +
-#     ylab("Acual Validation Ratios")
-# 
-
-
-
-```
-
-
-```{r}
-### Tuning Method 1
+### Tuning Method 1: Utilizing Caret's Grid Search Method
 control <- trainControl(method='repeatedcv', number=10, repeats=3)
 tunegrid_tune <- expand.grid(.mtry= c(sqrt(number_predictors), log2(number_predictors), number_predictors/3))
 # Initializing and fitting the random forest
@@ -202,10 +184,9 @@ rf_model_tuned1 <- train(actual ~ ., data = train_scaled, method = 'rf',
 
 ```
 
-
 ```{r, eval=FALSE}
 
-### Tuning Method 2: Manual Search
+### Tuning Method 2: Manual Grid Search
 control <- trainControl(method="repeatedcv", number=10, repeats=3, search="grid")
 tunegrid_tune <- expand.grid(.mtry= c(sqrt(number_predictors), log2(number_predictors), number_predictors/3))
 modellist_new <- list()
@@ -229,7 +210,6 @@ for (ntree in c(seq(40,600, 80))) {
 ```
 
 
-
 ```{r}
 # Reading results and model from manual search
 modellist_new <- readRDS("../saved_models/model_list_final.rds")
@@ -242,8 +222,6 @@ rf_model_tuned1
 summary(results)
 dotplot(results)
 ```
-
-
 As we can see, rd_model_tuned1 performs the best with mtry=p/3. We shall use this model to predict on the test set.
 
 ```{r}
