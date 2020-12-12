@@ -145,7 +145,7 @@ col4 <- colorRampPalette(c("#7F0000","red","#FF7F00","yellow","#7FFF7F",
 ui <- navbarPage( title = "Can we predict the US Presidential Elections?",
                 tabPanel("Results",
                          fluidRow(
-                             radioButtons("type","Electoral College or County-Level Results", choices = map_choices, selected = "states"),selectInput("model", "Choose a model", choices = model_choices, selected = "Multiple Linear Regression")
+                             radioButtons("type","Electoral College or County-Level Results", choices = map_choices, selected = "states"),selectInput("model", "Choose a model to display predicted results", choices = model_choices, selected = "Multiple Linear Regression")
                              
                              ), # end fluidRow
                          fluidRow(
@@ -276,15 +276,15 @@ server <- function(input, output) {
     }) #end of renderPrint
     
     output$electoral_votes <- renderTable({
-        electoral_results_df
+        electoral_results_df %>% arrange(Models)
     })
     
     output$rmse_ratio <- renderTable({
-        rmse_df
+        rmse_df %>% arrange(Root.MSE)
     })
     
     output$r2_table <- renderTable({
-        r2
+        r2 %>% arrange(R.Squared)
     })
         
 }
