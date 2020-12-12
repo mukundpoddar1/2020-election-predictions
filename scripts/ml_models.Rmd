@@ -150,7 +150,7 @@ test$xgb <- predict(xgb_model, test_final, missing = NaN)
 
 The top 10 most important features in the xgboost model:
 
-```{r xgboost_feat_imp, warning=FALSE}
+```{r xgboost_feat_imp, warning=FALSE, eval = F}
 head(xgb.importance(feature_names = NULL, 
                     model = xgb_model, data = x_train),10) %>%
   kableExtra::kable() %>% kableExtra::kable_styling()
@@ -243,7 +243,13 @@ rf_rmse <- rmse(test_scaled$actual,test$rf)
 ```{r, echo = F}
 # Save out predictions so we don't run code multiple times
 #save(mlr_model, svm_model, xgb_model, rf_model_tuned1, test, file = "../data/raw_predictions.rda")
+# Save our rf predictions to a separate test object since it will get overwritten in the load below
+test_rf <- test
 load("../data/raw_predictions.rda")
+# Add on rf predictions to the current test object which is used below
+test <- test %>% 
+  left_join(test_rf,
+            by = c("fips", "dem_amount", "rep_amount", "popestimate", "netmig", "race_white", "race_black", "race_hispanic", "race_aac", "age_0_to_19_years", "age_20_to_39_years", "age_40_to_59_years", "age_60_to_79_years", "age_80_years_or_older", "financial.services.and.insurance", "gasoline.and.other.energy.goods", "health.care", "other.nondurable.goods", "personal.consumption.expenditures", "food", "household", "nonprofit", "nondurable_goods", "durable_goods", "goods_clothing_footwear", "services", "recreation", "transportation", "raw_gdp", "gdp_change", "unemployment", "dem_poll_mean", "dem_poll_median", "dem_poll_sd", "rep_poll_mean", "rep_poll_median", "rep_poll_sd", "consistency_dem", "consistency_rep", "dem_rep_ratio"))
 ```
 
 ### Outcomes
