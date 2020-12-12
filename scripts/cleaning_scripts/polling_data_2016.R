@@ -3,7 +3,7 @@ library(tidyr)
 library(dplyr)
 
 # Loading in the dataframe
-df <- read_csv("data/Source Data/president_general_polls_2016.csv")
+df <- read_csv("../../data/Source Data/president_general_polls_2016.csv")
 
 # Selecting columns, dropping national polls, grouping by state, finding the mean, and renaming
 df1 <- df %>%
@@ -52,4 +52,4 @@ temp_merge <- merge(df1, df2, by.x = "state", by.y = 'state')
 final_df <- merge(temp_merge, df3, by.x = "state", by.y = 'state')
 
 # Writing file to csv
-write.csv(final_df, 'data/Clean Data/saul_cleaned/clean_polls_2016.csv', row.names = FALSE)
+write.csv(final_df, '../../data/Clean Data/saul_cleaned/clean_polls_2016.csv', row.names = FALSE)

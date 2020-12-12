@@ -30,8 +30,8 @@ files_2016 <- c("../data/Clean Data//base_county_state_fips_lkp.csv",
                 "../data/Clean Data//consumer_spending_2016.csv", 
                 "../data/Clean Data//county_gdp_2016.csv", 
                 "../data/Clean Data//unemployment_2016.csv" , 
-                "../data/Clean Data//saul_cleaned/clean_polls_2016.csv", 
-                "../data/Clean Data//saul_cleaned/clean_election_results_2016.csv")
+                "../data/Clean Data//clean_polls_2016.csv", 
+                "../data/Clean Data//clean_election_results_2016.csv")
 
 files_2020 <- c("../data/Clean Data//base_county_state_fips_lkp.csv", 
                 "../data/Clean Data//campaign_raised_2020.csv" ,
@@ -39,7 +39,7 @@ files_2020 <- c("../data/Clean Data//base_county_state_fips_lkp.csv",
                 "../data/Clean Data//consumer_spending_2018.csv",
                 "../data/Clean Data//county_gdp_2020.csv" ,
                 "../data/Clean Data//unemployment_2020.csv" ,
-                "../data/Clean Data//saul_cleaned/clean_polls_2020.csv", 
+                "../data/Clean Data//clean_polls_2020.csv", 
                 "../data/Clean Data//election_returns_2020.csv" )
 
 

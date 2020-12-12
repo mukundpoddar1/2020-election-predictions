@@ -19,7 +19,7 @@ library(caret)
 
 We will load our dataset here that has been cleaned and put together with all the scripts in the 'cleaning_scripts folder'. We will then standardise the data.
 
-Note: many ML applications use the data from the training set only to standardise the test set. However, that is the general practice when real world examples come one at a time while the training has been performed on many more instance together. The assumption there is that the distribution of the data is uniform across the training and test examples. In our application, each election cycle is unique, and is processed together. Before a certain election year, all the counties' predictors would be collected and the predictions would be done as a batch. Hence, we can standardise data grouped by an election cycle.
+Note:  we scale the test data here independently of the training data. This is non-standard practice that we deliberately choose here and the reasoning for it can be read at test_set_scaling.md.
 
 ```{r dataset, message = FALSE}
 train = read_csv("../data/merged_final_2016.csv")
@@ -36,13 +36,6 @@ colnames(y_test) = 'actual'
 
 x_train = scale(x_train)
 x_test = scale(x_test)
-# col_means = apply(x_train, 2, mean)
-# col_sds = apply(x_train, 2, sd)
-
-# x_train = sweep(x_train, 2, col_means, FUN = "-")
-# x_train = sweep(x_train, 2, col_sds, FUN = "/")
-# x_test = sweep(x_test, 2, col_means, FUN = "-")
-# x_test = sweep(x_test, 2, col_sds, FUN = "/")
 ```
 
 We now start using different Machine Learning models to predict the election outcomes. To keep some standardisation, we will store the actual results, and the predictions from each of the models we use into the y_train and y_test dataframes created above.
@@ -56,16 +49,24 @@ We selected a subset of our covariates for this model using a backwards stepwise
 x_train_mlr <- x_train %>% data.frame() %>% bind_cols(y_train)
 x_test_mlr <- x_test %>% data.frame() %>% bind_cols(y_test)
 # Fit model with backwards selected variables
-covs <- names(x_train)[-length(names(x_train))]
+covs <- names(x_train_mlr)[-length(names(x_train_mlr))]
 covs <- paste0(covs, collapse = " + ")
 
-mlr_model <- lm(actual ~ popestimate + race_white + race_black + 
-    race_hispanic + race_aac + age_0_to_19_years + age_20_to_39_years + 
-    age_40_to_59_years + nonprofit + nondurable_goods + raw_gdp + 
-    gdp_change + unemployment + dem_poll_median + dem_poll_sd + 
-    rep_poll_mean + rep_poll_median + rep_poll_sd + consistency_dem, data = x_train_mlr)
-
-test$mlr = predict(mlr_model, x_test_mlr)
+# Generate a full model using log transform to make LINE assumptions more satisfied
+mlr_full_model <- lm(eval(paste0("log(actual) ~ ", covs)), data = x_train_mlr)
+# Perform backwards stepwise selection to remove insignificant predictors
+step(mlr_full_model, direction = "back")
+# Create final model statement (has variables from each)
+mlr_model <- lm( log(actual) ~ dem_amount + rep_amount + popestimate + 
+    netmig + race_white + race_black + race_hispanic + race_aac + 
+    age_0_to_19_years + age_20_to_39_years + age_40_to_59_years + 
+    age_60_to_79_years + financial.services.and.insurance + gasoline.and.other.energy.goods + 
+    health.care + food + nonprofit + nondurable_goods + gdp_change + 
+    unemployment + dem_poll_mean + dem_poll_median + dem_poll_sd + 
+    rep_poll_mean + rep_poll_sd + consistency_dem + consistency_rep, 
+    data = x_train_mlr)
+# Save out exponentiated predictions
+test$mlr = exp(predict(mlr_model, x_test_mlr))
 ```
 
 
@@ -83,22 +84,20 @@ This model is an optimized distributed gradient boosting library, which produces
 ```{r xgboost, eval = F}
 train_final <- matrix(as.numeric(data.matrix(x_train)), nrow = nrow(train))
 test_final <- matrix(as.numeric(data.matrix(x_test)), nrow = nrow(test))
-#train_party_outcome <- ifelse(train_complete$democrats_pct>train_complete$republicans_pct,1,0)
+
 train_party_outcome <- train$dem_rep_ratio
 train_outcome <- matrix(as.numeric(data.matrix(train_party_outcome)))
 
 # GRID SEARCH -------------------------------------------------------------------------------
 #https://www.kaggle.com/silverstone1903/xgboost-grid-search-r
 
-searchGridSubCol <- expand.grid(subsample = c(0.5,0.7,1), 
-                                colsample_bytree = c(0.5,0.7,1),
-                                max_depth = c(3,4,5,6),
-                                eta = c(0.1,0.2,0.3,0.4)
+searchGridSubCol <- expand.grid(subsample = c(0.6,0.75,0.9,1), 
+                                colsample_bytree = c(0.5,0.6,0.8,1),
+                                max_depth = c(3,4,5,6,7,8,9,10),
+                                eta = c(0.001,0.01,0.1,0.2,0.3,0.4)
 )
 
 obj<- "reg:squarederror"
-
-weightsData <- scales::rescale(train$popestimate, to=c(0,1))
 
 system.time(
   rmseErrorsHyperparameters <- apply(searchGridSubCol, 1, function(parameterList){
@@ -112,8 +111,8 @@ system.time(
     xgb_model <- xgboost(data =  x_train, label=train_outcome, nrounds = 200, 
                          verbose = 0,"max.depth" = currentDepth, "eta" = currentEta,                               
                          "subsample" = currentSubsampleRate, "colsample_bytree" = currentColsampleRate
-                         , print_every_n = 20, "min_child_weight" = 1,
-                         early_stopping_rounds = 20,objective=obj, eval_metric="rmse", weight = weightsData
+                         , print_every_n = 20, "min_child_weight" = currentMinChild,
+                         early_stopping_rounds = 20,objective=obj, eval_metric="rmse"
                          )
     
     xvalidationScores <- as.data.frame(xgb_model$evaluation_log)
@@ -125,33 +124,27 @@ varnames <- c("TrainRMSE", "SubSampRate", "ColSampRate", "Depth","eta","currentM
 names(output) <- varnames
 head(output)
 best_params <- output[which.min(output$TrainRMSE),]
-best_params
-# -----------------------------------------------------------------------------------------------
+best_params #SubSampRate - 0.6, ColSampRate=1, depth=10, eta= 0.4,currentMinChild=1
+
+# TRAINING XGBOOST MODEL-----------------------------------------------------------------------------------------------
 
 #https://xgboost.readthedocs.io/en/latest/parameter.html
-xgb_model = xgboost(data=x_train, 
-                    label=train_outcome, 
+xgb_model = xgboost(data=x_train,
+                    label=train_outcome,
                     missing = NaN,
                     nrounds=200,
-                    verbose=0, 
-                    eta=best_params$eta, 
-                    max_depth=best_params$Depth, 
-                    subsample=best_params$SubSampRate, 
-                    min_child=best_params$currentMinChild,
+                    verbose=0,
+                    eta=best_params$eta,
+                    max_depth=best_params$Depth,
+                    subsample=best_params$SubSampRate,
+                    min_child_weight=1,
                     colsample_bytree=best_params$ColSampRate,
-                    objective=obj, 
+                    objective=obj,
                     eval_metric="rmse",
-                    weight = weightsData
                     )
 
-# train_preds <- predict(xgb_model, x_train, missing = NaN)
-# rmse(train$dem_rep_ratio,train_preds)
-# plot(train$dem_rep_ratio,train_preds)
-
-# test_preds <- predict(xgb_model, x_test, missing = NaN)
 test$xgb <- predict(xgb_model, test_final, missing = NaN)
 xgboost_rmse <- rmse(test$dem_rep_ratio,test$xgb)
-# plot(test$dem_rep_ratio,test_preds)
 ```  
 
 
@@ -234,18 +227,16 @@ rf_rmse <- rmse(test_scaled$actual,test$rf)
 
 ```{r, echo = F}
 # Save out predictions so we don't run code multiple times
-#save(mlr_model, svm_model, xgb_model, test, file = "../data/raw_predictions.rda")
+# save(mlr_model, svm_model, xgb_model, test, file = "../data/raw_predictions.rda")
 load("../data/raw_predictions.rda")
 ```
-
- 
 
 ### Outcomes
 
 #### Predict Electoral College Split
 
-```{r}
-# electoral college
+```{r, message = FALSE}
+# electoral college; note: Maine and Nebraska have Congressional District splits, so the roll-up is separated there 
 elect_tbl <- read_csv("../data/electoral_college.csv")
 maine_neb <- read_csv("../data/electoral_votes_main_nebraska.csv")
 
@@ -379,12 +370,12 @@ electoral_college_predictions <- map(.x = list("mlr", "svm", "xgb"), .f = ~get_e
 # Save out predictions for Shiny app
 saveRDS(electoral_college_predictions, "../data/electoral_college_predictions.rds")
 
-
-
 ```
 
-```{r electoral_college_results}
-# Create a data frame of total ellectoral college prediction
+```{r electoral_college_results, message = FALSE}
+electoral_college_predictions <- readRDS("../data/electoral_college_predictions.rds")
+
+# Create a data frame of total electoral college prediction
 mlr_total <- electoral_college_predictions$mlr[c("dem_electoral_votes","rep_electoral_votes")] %>% colSums()
 svm_total <- electoral_college_predictions$svm[c("dem_electoral_votes","rep_electoral_votes")] %>% colSums()
 xgb_total <- electoral_college_predictions$xgb[c("dem_electoral_votes","rep_electoral_votes")] %>% colSums()
@@ -402,12 +393,10 @@ data.frame(
 
 ### Error Metrics  
 
-We want to now look at the metrics for all the models used. For now we just visualise the predictions against the actual outcomes, and we will fill more here in due time.
+We want to now look at the metrics for all the models used. For now we just visualize the predictions against the actual outcomes, and we will fill more here in due time.
 
 
 ```{r visualisation}
-# will correct aspect ratio
-ggplot(test, aes(x=dem_rep_ratio)) + geom_point(aes(y=svm)) + geom_abline(slope=1, intercept = 0, color='red') +ylim(c(0,1))
 
 test %>% 
   select(dem_rep_ratio, mlr, svm, xgb) %>% 
@@ -416,9 +405,11 @@ test %>%
   geom_point(alpha = 0.6) +
   geom_abline(slope = 1, intercept = 0) +
   scale_color_manual(name = "Prediction\nType", values = c("darkolivegreen3", "darkorange3", "dodgerblue3")) +
+  scale_x_log10() +
+  scale_y_log10() +
   theme_bw() +
   xlab("Actual Values") +
-  ylab("Predictions") +
+  ylab("Predictions") + 
   ggtitle("Plot of predictions against actual values\n(Ratio of Democrat to Republican Votes)")
   
 ```  

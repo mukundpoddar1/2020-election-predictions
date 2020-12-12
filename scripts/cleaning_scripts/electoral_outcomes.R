@@ -18,10 +18,10 @@ library(ggplot2)
 # LOAD DATA ---------------------------------------------------------------
 
 #election results 2020
-elections_2020 <- read_csv("../data/merged_final_2020.csv")  
+elections_2020 <- read_csv("../../data/merged_final_2020.csv")  
 
 # electoral college
-elect_tbl <- read_csv("../data/electoral_college.csv")
+elect_tbl <- read_csv("../../data/electoral_college.csv")
 
 
 # CALCULATE VOTES ---------------------------------------------------------

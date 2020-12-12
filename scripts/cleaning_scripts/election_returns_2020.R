@@ -71,6 +71,9 @@ dfs2 <- dfs %>% map(function(x) if(length(names(x)) == 1) return(reformat_state(
 # 4. Make the state name a column
 dfs2 <- map2(.x = names(dfs2), .y = dfs2, function(.x, .y) {return(.y %>% mutate(state = .x))})
 
+#export results of % won and population for comparison with covid trends
+write_csv(dfs2 %>% map_df(bind_rows),"../../data/Clean Data/election_results_2020_population_percent.csv")
+          
 # 5. row bind and keep state, COUNTY, BIDEN, TRUMP, OTHER
 dfs2 <- dfs2 %>% map_df(bind_rows) %>% select(state, COUNTY, BIDEN, TRUMP, OTHER)
 
