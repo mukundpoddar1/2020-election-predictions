@@ -250,6 +250,9 @@ load("../data/raw_predictions.rda")
 test <- test %>% 
   left_join(test_rf,
             by = c("fips", "dem_amount", "rep_amount", "popestimate", "netmig", "race_white", "race_black", "race_hispanic", "race_aac", "age_0_to_19_years", "age_20_to_39_years", "age_40_to_59_years", "age_60_to_79_years", "age_80_years_or_older", "financial.services.and.insurance", "gasoline.and.other.energy.goods", "health.care", "other.nondurable.goods", "personal.consumption.expenditures", "food", "household", "nonprofit", "nondurable_goods", "durable_goods", "goods_clothing_footwear", "services", "recreation", "transportation", "raw_gdp", "gdp_change", "unemployment", "dem_poll_mean", "dem_poll_median", "dem_poll_sd", "rep_poll_mean", "rep_poll_median", "rep_poll_sd", "consistency_dem", "consistency_rep", "dem_rep_ratio"))
+
+# Save out raw predictions with random forest added in
+saveRDS(test, "../data/test_with_rf.rds")
 ```
 
 ### Outcomes
@@ -384,7 +387,7 @@ electoral_college_predictions <- purrr::map(.x = list("mlr", "svm", "xgb","rf"),
   electoral_college_predictions[["actual"]] <- actual_results
   
 # Save out predictions for Shiny app
-#saveRDS(electoral_college_predictions, "../data/electoral_college_predictions.rds")
+saveRDS(electoral_college_predictions, "../data/electoral_college_predictions.rds")
 
 ```
 
@@ -411,7 +414,7 @@ electoral_results_df <- data.frame(
 
 electoral_results_df %>% kableExtra::kable() %>% kableExtra::kable_styling()
 
-#save(electoral_results_df, file = "../results/electoral_results_df.rda")
+save(electoral_results_df, file = "../results/electoral_results_df.rda")
 ```
 
 ### Error Metrics  
@@ -448,7 +451,7 @@ rmse_df <- data.frame(
 ) 
 
 rmse_df %>% kableExtra::kable() %>% kableExtra::kable_styling()
-#save(rmse_df, file = "../results/rmse_df.rda")
+save(rmse_df, file = "../results/rmse_df.rda")
 ```
 
 ```{r r_squared}
@@ -463,7 +466,7 @@ r2 <- data.frame(
 ) 
 
 r2 %>% kableExtra::kable() %>% kableExtra::kable_styling()
-#save(r2, file = "../results/r2.rda")
+save(r2, file = "../results/r2.rda")
 ```
 
 

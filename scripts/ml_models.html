@@ -954,7 +954,7 @@ electoral_college_predictions &lt;- purrr::map(.x = list(&quot;mlr&quot;, &quot;
   electoral_college_predictions[[&quot;actual&quot;]] &lt;- actual_results
   
 # Save out predictions for Shiny app
-#saveRDS(electoral_college_predictions, &quot;../data/electoral_college_predictions.rds&quot;)</code></pre>
+saveRDS(electoral_college_predictions, &quot;../data/electoral_college_predictions.rds&quot;)</code></pre>
 <pre class="r"><code>electoral_college_predictions &lt;- readRDS(&quot;../data/electoral_college_predictions.rds&quot;)
 
 # Create a data frame of total electoral college prediction
@@ -1048,7 +1048,7 @@ Actual
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>#save(electoral_results_df, file = &quot;../results/electoral_results_df.rda&quot;)</code></pre>
+<pre class="r"><code>save(electoral_results_df, file = &quot;../results/electoral_results_df.rda&quot;)</code></pre>
 </div>
 </div>
 <div id="error-metrics" class="section level3">
@@ -1124,7 +1124,7 @@ Random Forest
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>#save(rmse_df, file = &quot;../results/rmse_df.rda&quot;)</code></pre>
+<pre class="r"><code>save(rmse_df, file = &quot;../results/rmse_df.rda&quot;)</code></pre>
 <pre class="r"><code># Create a data frame of all R^2
 r2 &lt;- data.frame(
   Models = c(&quot;Multiple Linear Regression&quot;, &quot;Support Vector Machine&quot;, &quot;XGBoost&quot;,&quot;Random Forest&quot;),
@@ -1182,7 +1182,7 @@ Random Forest
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>#save(r2, file = &quot;../results/r2.rda&quot;)</code></pre>
+<pre class="r"><code>save(r2, file = &quot;../results/r2.rda&quot;)</code></pre>
 </div>
 
 

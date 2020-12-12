@@ -37,8 +37,7 @@ nov_2nd_covid_data<- state_covid_data %>% filter(report_date=="2020-11-02")
 electoral_preds <- readRDS("../data/electoral_college_predictions.rds")
 
 # Load in raw predictions
-load("../data/raw_predictions.rda")
-rm(mlr_model, svm_model, xgb_model)
+test <- readRDS("../data/test_with_rf.rds")
 
 # Load in electoral college resutlts, RMSE, and R2 calculated from scripts/ml_models.rmd
 load("r2.rda")
