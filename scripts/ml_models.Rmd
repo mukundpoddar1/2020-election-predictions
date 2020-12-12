@@ -148,6 +148,13 @@ xgb_model = xgboost(data=x_train,
 test$xgb <- predict(xgb_model, test_final, missing = NaN)
 ```  
 
+The top 10 most important features in the xgboost model:
+
+```{r xgboost_feat_imp, warning=FALSE}
+head(xgb.importance(feature_names = NULL, 
+                    model = xgb_model, data = x_train),10) %>%
+  kableExtra::kable() %>% kableExtra::kable_styling()
+```
 
 ### Random Forest
 The model is utilizes decision trees, bagging, and randomness by randomly selected predetermined number of predictors at each node, for predictions. Using 10 fold cross validation repeated 3 times and after determining a baseline model, we attempt to tune the model with Caret's in built grid search tuning method and with manual grid search. In the end, the model that uses Caret's grid search is the strongest model. 
