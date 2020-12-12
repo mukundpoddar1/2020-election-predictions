@@ -105,7 +105,7 @@ ui <- navbarPage(title = "Exploratory Analysis",
                  plotOutput("Corr_matrix")
                ),
                verticalLayout(
-                 column(12, align ="center", h5("2016 Corelation Matrix")),
+                 column(12, align ="center", h5("2020 Corelation Matrix")),
                  plotOutput("Corr_matrix_2")
                )
              ) # end of splitLayout
@@ -175,12 +175,12 @@ server <- function(input, output) {
   #### Correlation
   output$Corr_matrix <- renderPlot({
     corrplot(cor(select(dataset_2016,contains(input$corr)),
-                 use = "pairwise.complete.obs"),method="number",mar=c(0,0,2,0),col=col4(10),number.cex=0.50)
+                 use = "pairwise.complete.obs"),method="number",mar=c(0,0,2,0),col=col4(10),number.cex=0.70)
   })
   
   output$Corr_matrix_2 <- renderPlot({
     corrplot(cor(select(dataset_2020,contains(input$corr)),
-                 use = "pairwise.complete.obs"),method="number",mar=c(0,0,2,0),col=col4(10),number.cex=0.50)
+                 use = "pairwise.complete.obs"),method="number",mar=c(0,0,2,0),col=col4(10),number.cex=0.70)
   })
   
   
