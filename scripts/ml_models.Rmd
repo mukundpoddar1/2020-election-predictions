@@ -379,7 +379,7 @@ electoral_college_predictions <- purrr::map(.x = list("mlr", "svm", "xgb","rf"),
   electoral_college_predictions[["actual"]] <- actual_results
   
 # Save out predictions for Shiny app
-saveRDS(electoral_college_predictions, "../data/electoral_college_predictions.rds")
+#saveRDS(electoral_college_predictions, "../data/electoral_college_predictions.rds")
 
 ```
 
@@ -406,7 +406,7 @@ electoral_results_df <- data.frame(
 
 electoral_results_df %>% kableExtra::kable() %>% kableExtra::kable_styling()
 
-save(electoral_results_df, file = "../results/electoral_results_df.rda")
+#save(electoral_results_df, file = "../results/electoral_results_df.rda")
 ```
 
 ### Error Metrics  
@@ -443,7 +443,7 @@ rmse_df <- data.frame(
 ) 
 
 rmse_df %>% kableExtra::kable() %>% kableExtra::kable_styling()
-save(rmse_df, file = "../results/rmse_df.rda")
+#save(rmse_df, file = "../results/rmse_df.rda")
 ```
 
 ```{r r_squared}
@@ -458,7 +458,7 @@ r2 <- data.frame(
 ) 
 
 r2 %>% kableExtra::kable() %>% kableExtra::kable_styling()
-save(r2, file = "../results/r2.rda")
+#save(r2, file = "../results/r2.rda")
 ```
 
 The top 10 most important features in the xgboost model:
