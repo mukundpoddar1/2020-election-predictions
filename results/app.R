@@ -275,15 +275,15 @@ server <- function(input, output) {
     }) #end of renderPrint
     
     output$electoral_votes <- renderTable({
-        electoral_results_df %>% arrange(Models)
+        electoral_results_df
     })
     
     output$rmse_ratio <- renderTable({
-        rmse_df %>% arrange(Root.MSE)
+        rmse_df
     })
     
     output$r2_table <- renderTable({
-        r2 %>% arrange(R.Squared)
+        r2
     })
         
 }
