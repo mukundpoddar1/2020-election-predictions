@@ -1,0 +1,214 @@
+---
+title: 'Fate of the Unites States: Can We Predict the US Election?'
+author: "Nellie Ponarul, Ben Shea, Mukund Poddar, Saul Holding"
+output: 
+  html_document:
+    theme: yeti
+---  
+
+```{r, include = F, warning = F, message = F}
+library(tidyverse)
+library(forcats)
+library(dslabs)
+library(corrplot)
+library(usmap)
+
+#final datasets for 2016 and 2020
+dataset_2016 <- read.csv("data/merged_final_2016.csv")
+dataset_2020 <- read.csv("data/merged_final_2020.csv")
+
+#read in dataset for 2016 election returns
+election_returns_2016 <- read.csv("data/Source Data/election_returns_2012_2016.csv")
+
+#read in 2020 election returns % Biden, % Trump, population
+election_returns_2020<- read.csv("data/Clean Data/election_results_2020_population_percent.csv")
+# Region information
+# https://www.census.gov/geographies/reference-files/2017/demo/popest/2017-fips.html
+geocodes <- readxl::read_excel("data/Source Data/state-geocodes-v2017.xlsx", skip= 5)
+
+# Create division field
+geocodes$division <- ifelse(str_detect(geocodes$Name, "Division"), geocodes$Name, NA)
+geocodes$region <- ifelse(str_detect(geocodes$Name, "Region"), geocodes$Name, NA)
+
+# Fill in division and region fields down to create full columns
+geocodes <- geocodes %>% 
+  fill(division, .direction = "down")
+
+geocodes <- geocodes %>% 
+  fill(region, .direction = "down")
+
+#create list of countries for drop-down selection
+var_names <- c("FIPS", "Campaign Funds (Democrat)", "Campaign Funds (Republican)",
+               "Population estimate", "Net Migration", "Race (White)", 
+               "Race (Black)", "Race (Hispanic)", "Race (Asian)",
+               "Age (0-19 years)", "Age (20-39 years)", "Age (40-59 years)",
+               "Age (60-79 years)", "Age (80 years or older)", "Consumer Spending (Financial Services and Insurance)",
+               "Consumer Spending (Gasoline and other Energy Goods)", 
+               "Consumer Spending (Health Care)", "Consumer Spending (Other Nondurable Goods)",
+               "Consumer Spending (Personal Consumption Expenditures)",
+               "Consumer Spending (Food)", "Consumer Spending (Household)",
+               "Consumer Spending (Non Profit)", "Consumer Spending (Nondurable Goods)",
+               "Consumer Spending (Durable Goods)", "Consumer Spending (Goods, Clothing, Footwear)",
+               "Consumer Spending (Services)", "Consumer Spending (Recreation)",
+               "Consumer Spending (Transportation)", "Raw GDP", "GDP change",
+               "Unemployment", "Mean Poll Outcome (Democrats)", "Median Poll Outcome (Democrats)",
+               "Standard Deviation Poll Outcome (Democrats)", "Mean Poll Outcome (Republicans)", 
+               "Median Poll Outcome (Republicans)", "Standard Deviation Poll Outcome (Republicans)",
+               "Election Returns Consistency (Democrats)", "Election Returns Consistency (Republicans)", "Ratio of % Votes for Democrats to % Votes for Republicans") 
+variable_choices <- setNames(names(dataset_2016), var_names)
+
+# colors for correlation matrix
+col4 <- colorRampPalette(c("#7F0000","red","#FF7F00","yellow","#7FFF7F", 
+                           "cyan", "#007FFF", "blue","#00007F"))
+```     
+
+
+### Instructions to access our data  
+
+To access our data and analysis code, please see our [GitHub](https://github.com/mukundpoddar1/2020-election-predictions). The README details each of our data sources and has links to cleaning scripts for each, as well as a link to our modeling analysis.  
+
+### Overview and Motivation  
+
+Drawing inspiration from Nate Silver’s FiveThirtyEight election predictions, we want to investigate how data science can give us insights on the outcome of one of the most watched and polarizing presidential elections in the world. By performing exploratory data analysis and building various machine learning models and a multiple linear regression model to predict the outcome of the election, we hope to identify what factors drive the current American political climate.   
+
+### Related Work  
+
+We were inspired by predictions by [FiveThirtyEight](https://projects.fivethirtyeight.com/2020-election-forecast/) and the [Economist](https://projects.economist.com/us-2020-forecast/president/). Considering the amount of data that is generated and is relevant to the US Presidential elections, our analysis can lead to interesting insights long before the final results are called, and gives us an opportunity to look into a possible future event.  
+
+### Initial Questions  
+
+We wanted to ultimately predict the outcome of the US presidential election, although our actual outcome metric to predict evolved over time. Many of the election predictions we see in the field (like FiveThirtyEight or the Economist) are state-level predictions, made using models that predominantly use polling data with some amount of demographic data like race, age, and education level. State-level predictions for a US presidential election make intuitive sense, since results are determined at a state level - the candidate with the majority of the votes in a given state wins the state (excluding Maine and Nebraska, which also delegate votes to congressional districts separately).   
+
+
+Given that there are only 51 states (including DC), we felt like this would be an insufficient number of observations to gain strong predictions from regression and machine learning models without pulling data from several presidential elections. Given how drastically the political climate has changed recently (and our lack of resources), we did not think that using data from before 2016 would give us accurate predictions. To resolve this issue, we collected our data at the county level, giving us over 3,000 observations. This also allowed us to take a more granular look at the factors that may influence the election. With much of the live 2020 election coverage commenting how blue or red a county would be based on past election behavior, we thought it would be interesting to investigate if other demographic factors bear weight on a county’s politics, and how that ultimately impacts the outcome of the elections.  
+
+
+We also wanted to explore the relationship between COVID-19 cases and the election results. We recognise covid was a huge factor going into this election, but a lack of an analogous event in 2016, using it as a predictor proved to be hard. We feel that many of its knock-on effects might be captured in some of our other metrics, especially economical data. We still wanted to understand if higher COVID cases per capita would lead to a state voting more heavily democrat or republican, so we take a look at this separately.  
+
+### Data  
+
+We pulled various types of data about the counties in the United States, including demographic, financial, and polling data. We also pulled the election returns data for past elections and polls for the current election. As much as we could, we pulled this data at the county level, with polling data at the state level, and used this data to predict who won each state, Democrat or Republican. 
+
+Most of our data came from downloadable CSV files, which we saved on our GitHub in the [Source Data](https://github.com/mukundpoddar1/2020-election-predictions/tree/main/data/Source%20Data) folder. To obtain a table of the electoral votes each state is allotted, we scraped a web page and manually entered additional information. Each data source is described with links to their cleaning scripts in our GitHub’s [README](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/README.md) file.   
+
+We ultimately created two datasets with all of our covariates and election outcomes, one from 2016 and one from 2020. For 2020, as election results are yet to be finalized, we scraped NPR’s election projections. Some of our demographic covariates for 2020 were not available for 2020, so we used covariates from 2019 as proxies. We used 2016 data to create prediction models that would predict the 2020 presidential election results.
+
+
+### Exploratory Analysis  
+
+To visualize the relationships between our different covariates, we created scatterplots and correlation plots through our [EDA Shiny app](https://github.com/mukundpoddar1/2020-election-predictions). Looking at the correlation matrices, the correlations between each covariate and the democratic/republic ratio all had a low to medium correlation, but a lot of the covariates related to the polls and funding had very strong associations. While It could be grounds to remove out either the mean or median poll results (since they more or less would be providing the same information), the machine learning models and the backward selection should take that into consideration and either remove one or the other, or give it a low weight on feature importance. We also looked at histograms to understand the distribution of our variables, and distributions of our variables by state using boxplots. In particular, we wanted to understand what percent of the county population actually voted, as we are using county population as a proxy for voter turnout given that we wouldn’t have the turnout for the year we are trying to predict. We also wanted to evaluate certain assumptions we intended to make in our prediction models, namely that the distribution of our predictor variables were similar between the 2016 data and the 2020 data.
+
+
+```{r histogram, echo = F, warning = F, message = F}
+var_s <- "consistency_dem"
+
+p1 <- ggplot(dataset_2016, aes_string(var_s))+
+      geom_histogram(fill="red", color = "grey")+
+      xlab(names(variable_choices)[which(variable_choices == var_s)]) +
+      ylab("Count") +
+      theme_bw() +
+      ggtitle("2016 Histogram") +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+p2 <- ggplot(dataset_2020, aes_string(var_s))+
+      geom_histogram(fill="blue", color = "grey")+
+      xlab(names(variable_choices)[which(variable_choices == var_s)]) +
+      ylab("Count") +
+      theme_bw() +
+      ggtitle("2020 Histogram") +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+gridExtra::grid.arrange(p1, p2, ncol = 2, widths = c(1,1))
+```   
+
+Our election returns consistency metric for Democrats indicates the ratio of the proportion of votes for the Democrat candidate in the current presidential election to the proportion of votes for the Democrat candidate in the previous presidential election. These histograms show that the ratio was more normally distributed with smaller variance when comparing 2020 outcomes to 2016 outcomes than comparing 2016 outcomes to 2012 outcomes. This suggests that although we’ve had a tumultuous political environment in recent years, The percentage of Democrat votes increased between 2016 and 2020 across the country.   
+
+```{r, echo = F, warning = F, message = F}
+# Create state bar plot
+variable_box = "race_black"
+
+e_16 <- dataset_2016 %>% 
+  mutate(state_fips = str_sub(fips, 1,2)) %>% 
+  left_join(geocodes %>% select(`State (FIPS)`, region, Name), by = c("state_fips" = "State (FIPS)"))
+
+# Plot
+e_16 %>% 
+  ggplot(aes_string(x = "Name", y = variable_box, fill = "region")) +
+  scale_y_log10() +
+  geom_boxplot() +
+  xlab("State") +
+  ylab(names(variable_choices)[which(variable_choices == variable_box)]) + 
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```  
+
+States across the United States have proportions of the popluation that are black, however we see that states in the South and Northeast have more counties with higher black populations. The West has the lowest percentages and lowest variability within counties.  
+
+```{r, echo = F, warning = F, message = F}
+varname = "dem_rep_ratio"
+p1 <- ggplot(dataset_2016, aes_string(varname))+
+    geom_histogram(fill="red", color = "grey")+
+    xlab(names(variable_choices)[which(variable_choices == varname)]) +
+    ylab("Count") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+p1
+```  
+
+
+```{r}
+# Corrplot
+```  
+
+None of the covariates had a correlation higher than about 0.5 with our outcome variable (`dem_rep_ratio`), but a lot of the covariates had very strong associations to the polls and funding. It could be grounds to throw out either the mean or median poll results since they more or less would be providing the same information. We leave the decision to include or not weigh these variables strongly to our machine learning models and regression selection procedures.  
+
+We had some deliberation about whether or not to capture data at the county level or the state level. While predictions would possibly be more straightforward at a state level, we decided to collect data at the county level in order to have enough observations to have predictive power in our models.
+
+With county-level data, we wanted to find the best county-level metric that could be used to calculate which party ended up with more votes in each state. We have the county-level percentage of votes that went to the two leading political parties, the Democrats and Republicans, and tried a number of methods to predict these percentages and ultimately predict the outcome of the Electoral College, including:   
+
+
+* Perform a classification analysis and predict a Democrat or Republican winner for each county.   
+    * **Problem**: We found that this gives highly inaccurate predictions since winners are determined at the state level, not the county level. Hence, the margin of victory at the county level is very important.  
+* Predict the percentage of Democrat votes in each county, and consider the remaining percentage of votes Republican.  
+    * **Problem**: This approach overstates the percentage of Republican votes, since it neglects third party votes. Eg: Democrats won 48% of the vote, one would assume Republicans won 52% of the vote. However, often the republicans get <48% of the vote as third party candidates take over 4% of the vote at the county level.  
+* Predict the percentage of Democrats votes and the percent of Republicans votes for each county separately.  
+    * **Problem**: These two outcomes are not independent. They should sum up to 100% but this is hard to model in a ML setting.  
+    
+Finally, we decided to take the ratio of these percentages as our outcome variable since it combined the information from both variables into one variable and did not resort to classification, where we would lose information. We assumed 
+
+
+### Final Analysis  
+
+For our final analysis, we created four [prediction models](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/ml_models.Rmd) which we trained on 2016 data and ran on the 2020 data in order to predict the 2020 election results. We also created two Shiny apps, one to create all of our exploratory visualizations and one to compare our prediction results to the actual results.         
+
+For our predictions, we built multiple linear regression, Random Forest, XGboost and Support Vector Machine models. We chose these models because we wanted to try out prediction methods in order to determine which model created the best predictions, and whether or not any of the machine learning models performed better than the multiple linear regression model.   
+
+We built the multiple linear regression model by modeling the log of the ratio of percent democrat votes to percent republican votes on all of our covariates and then performed a backwards stepwise selection in order to remove predictors from the model and improve our model fit. We performed a log transform of the outcome in order to satisfy the assumptions of the linear model, namely to achieve normality and homoscedasticity. While this transformation was necessary in order to build a linear regression model, it makes it more difficult to compare the root MSE and $R^2$ values to the other models. That said, the multiple linear regression model had the lowest root MSE of 0.38, but the lowest r-squared of 0.03 of the 4 models.    
+
+Support Vector Machine does not seem to perform too well on the dataset (a different kernel might work better). It predicts an electoral college outcome of 345 voted for the democratic party, and 193 for the Republican party. It’s RMSE is 0.59 and its $R^2$ is 0.47 which is not too good. However, visually it seems to match the county level actual predictions very closely. We believe a significant amount of the errors are concentrated in the counties of Utah that it predicted heavily democratic, and some areas of the Northeast that it predicted Republican.  
+
+After hyperparameter tuning and evaluating the model based on minimizing the root MSE, the XGBoost model was the closest to predicting the actual results of the election (that is, the Electoral College votes) with 309 electoral college votes for Biden, and 229 votes for Trump. The root MSE was the third lowest at 0.47, and had the second highest $R^2$ at 0.65. The top features that were factored in the model were: The amount of money fundraised for the Democrats, percent of the population that is white, and the average poll ratings for Democrats.  
+
+The tuned Random Forest model seems to perform well but not uniformly. The model has the best $R^2$ (0.75) out of all the models and the second lowest root mean squared error (0.41) , which indicates that the model predicts the counties relatively well. However, the Random Forest heavily favors Democrats as the predictions point towards a 370 to 168 electoral college for Biden. The most important features of the model are   
+
+For future analysis, we would include more information related to voter registration, incorporate results and polls from the Senate and House elections to better inform our predictions, and include Presidential election results prior to 2016 to have more data to train our models. In addition to this, future attempts should gather data from multiple elections as this would allow the models to learn different economic, political, and socioeconomic climates, making the model much more robust. We would also like to do a deeper dive on how COVID-19 affected the 2020 election results; but as the pandemic only extends back to the end of 2019, we were unable to train our model with these trends and prior presidential election data.  
+
+### Potential Impact of Project    
+
+Due to the complex and ever-evolving nature of each election cycle, creating a powerful model that consistently predicts the presidential elections has been a  particularly difficult task to surmount. However, with every election cycle comes a wave of data scientists, from neophytes to pundits, who decide to channel large amounts of time, energy, and resources into predicting who will be standing on stage on January 20th. We asked ourselves why. 
+
+We came to the conclusion that developing a model that robustly predicts each election not only has the potential to bring fame and glory, but also has wide-reaching implications for society. Indeed, with consistent and accurate predictions, a model can aid in engendering economic stability, fostering critical financial market strength and increasing the attractiveness of US industries to important domestic and foreign investors. On a more micro level, accurate predictions can allow businesses to update or even completely reorient their competitive strategies in response to predicted future political environments, thereby further reducing job losses and smoothing out economic dislocations. Moreover, on an individual level, accurate predictions provide people across the world the time and certainty needed to make well informed decisions in advance of an election from buying or selling assets to migrating before government and policy change. Lastly and to provide a more specific example, presidential campaign committees can use up to date predictions to potentially identify what its constituents truly care about, allowing for more competitive and efficient races. 
+
+However, it is always important to keep in mind that powerful models, with all the good that they can bring, have the potential to be poisoned chalices. Current administrations, although hopefully unlikely in the United States, might introduce unfair policies that ensure victory in the next cycle. This may include stricter transportation regulations or the leveraging of power over state and local governments to reduce transportation funding in selected areas to reduce voter turnout. There is even the possibility of the current administration to tactfully cancel the next election. In addition to this, if the model is able to be extended to predict foreign elections, it is entirely possible that the predictions may be used to predict and silence dissent before an election cycle. 
+
+Although these events are potentially unfathomable to most of us, to ensure a safe and better future, data scientists need to fully understand the extent of the power that their models have and the potential consequences of this power across space and time, especially as machines become more advanced, data more rich, and the models more powerful.
+
+
+
+
+
+
+
+
+
+
