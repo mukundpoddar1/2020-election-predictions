@@ -39,6 +39,9 @@ electoral_preds <- readRDS("../data/electoral_college_predictions.rds")
 # Load in raw predictions
 test <- readRDS("../data/test_with_rf.rds")
 
+#load in feature importance datasets
+load("feature_importance.rda")
+
 # Load in electoral college resutlts, RMSE, and R2 calculated from scripts/ml_models.rmd
 load("r2.rda")
 load("rmse_df.rda")
@@ -59,12 +62,12 @@ geocodes <- geocodes %>%
 
 #Dataset for voter turnout/population to assess proxy of population for voter turnout (which we multiply by the ratio of democrats/republican votes for each county)
 turnout_pop_2016 <- election_returns_2016 %>% filter(year==2016) %>%
-    select(FIPS, totalvotes) %>%
-    left_join(dataset_2016 %>% select(fips, popestimate),by=c("FIPS"="fips")) %>%
+    dplyr::select(FIPS, totalvotes) %>%
+    left_join(dataset_2016 %>% dplyr::select(fips, popestimate),by=c("FIPS"="fips")) %>%
     mutate(turnout_population_ratio = totalvotes/popestimate)
 
 #reformat 2020 election returns to get democratic/republic vote ratio by state
-election_returns_totals_2020 <- election_returns_2020 %>% select(state, COUNTY, BIDEN, TRUMP, POPULATION) %>% mutate(biden_votes = BIDEN*POPULATION, trump_votes =TRUMP*POPULATION)
+election_returns_totals_2020 <- election_returns_2020 %>% dplyr::select(state, COUNTY, BIDEN, TRUMP, POPULATION) %>% mutate(biden_votes = BIDEN*POPULATION, trump_votes =TRUMP*POPULATION)
 state_ratio_2020 <- election_returns_totals_2020 %>% group_by(state) %>% summarise(vote_ratio = sum(biden_votes,na.rm = TRUE)/sum(trump_votes,na.rm = TRUE), .groups = 'drop')
 
 #manually calculate RAtio for  
@@ -90,7 +93,7 @@ nov_2nd_covid_data_per_capita <- nov_2nd_covid_data %>%
     mutate(cases_per_100k = confirmed_cases/total_population*100000)
 
 #combine 2020 election returns and covid data to compare how elections went with covid case counts for each state
-vote_ratio_covid <- state_ratio_2020 %>% left_join(nov_2nd_covid_data_per_capita %>% select(state, cases_per_100k), by = "state")
+vote_ratio_covid <- state_ratio_2020 %>% left_join(nov_2nd_covid_data_per_capita %>% dplyr::select(state, cases_per_100k), by = "state")
 vote_ratio_covid$vote_color <- ifelse(vote_ratio_covid$vote_ratio>1,"blue","red")
 vote_ratio_covid <- vote_ratio_covid[complete.cases(vote_ratio_covid),]  #DC was removed
 
@@ -202,7 +205,25 @@ ui <- navbarPage( title = "Can we predict the US Presidential Elections?",
                                     verbatimTextOutput("click_info")
                              ) #end of column  
                          ) #end of fluidRow
-                ) #end tabPanel
+                ), #end tabPanel
+                tabPanel("Feature Importance for Machine Learning Models",
+                         fluidRow(
+                             column(width=4,
+                                    wellPanel("Feature Importance for the SVM model",
+                                              tableOutput("svm_importance"))),
+                             column(width=4,
+                                    wellPanel("Feature Importance for the XGBoost model",
+                                              tableOutput("xgb_importance"))),
+                             column(width=4,
+                                    wellPanel("Feature Importance for the Random Forest model",
+                                              tableOutput("rf_importance")))
+                         ), #end fluidRow
+                         fluidRow(
+                             column(width=4, plotOutput("svm_barchart")),
+                             column(width=4, plotOutput("xgboost_barchart")),
+                             column(width=4, plotOutput("rf_barchart"))
+                         ) #end FluidRow
+                 ) #end tabPanel
 ) #end of navbarPage
 
 server <- function(input, output) {
@@ -255,6 +276,19 @@ server <- function(input, output) {
                   axis.ticks = element_blank())
     })
     
+    output$electoral_votes <- renderTable({
+        electoral_results_df
+    })
+    
+    output$rmse_ratio <- renderTable({
+        rmse_df
+    })
+    
+    output$r2_table <- renderTable({
+        r2
+    })
+  
+# COVID vs Election Results ----------------------------------------------------------------------------------------------  
     output$covid_elections <- renderPlot({
         ggplot(vote_ratio_covid, aes(x=cases_per_100k, y=vote_ratio))+
             geom_point(aes(colour=vote_color), size = 4)+scale_color_manual(values = c("blue", "red"))+
@@ -273,17 +307,42 @@ server <- function(input, output) {
         nearPoints(vote_ratio_covid %>% .[,c("state","cases_per_100k","vote_ratio")],
                    input$scatterPlot_click, addDist = FALSE)
     }) #end of renderPrint
-    
-    output$electoral_votes <- renderTable({
-        electoral_results_df
+
+ 
+# Feature Importance of Machine Learning Models ------------------------------------------------------------------   
+    output$svm_importance <- renderTable({
+        svm_importance_df
     })
     
-    output$rmse_ratio <- renderTable({
-        rmse_df
+    output$xgb_importance <- renderTable({
+        xgb_importance_df
     })
     
-    output$r2_table <- renderTable({
-        r2
+    output$rf_importance <- renderTable({
+        df_importance_10_rf
+    })
+    
+    output$svm_barchart <- renderPlot({
+        svm_importance_df <- transform(svm_importance_df, 
+                                       Feature = reorder(Feature, Importance))
+        ggplot(svm_importance_df, aes(x=Feature, y=Importance))+
+            geom_bar(stat="identity", fill="red",color="black")+coord_flip()
+    })
+    
+    output$xgboost_barchart <- renderPlot({
+        xgb_importance_df <- transform(xgb_importance_df, 
+                                       Feature = reorder(Feature, Gain))
+        ggplot(xgb_importance_df, aes(x=Feature, y=Gain))+
+            geom_bar(stat="identity", fill="white",color="black")+
+            coord_flip()
+    })
+    
+    output$rf_barchart <- renderPlot({
+        df_importance_10_rf <- transform(df_importance_10_rf, 
+                                       Feature = reorder(Feature, Overall))
+        ggplot(df_importance_10_rf, aes(x=Feature, y=Overall))+
+            geom_bar(stat="identity", fill="blue",color="black")+
+            coord_flip()
     })
         
 }

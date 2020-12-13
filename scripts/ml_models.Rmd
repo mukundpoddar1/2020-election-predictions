@@ -12,6 +12,7 @@ library(xgboost)
 library(Metrics)
 library(caret)
 library(tidyverse)
+library(rminer)
 ```
 
 
@@ -36,6 +37,8 @@ colnames(y_test) = 'actual'
 
 x_train = scale(x_train)
 x_test = scale(x_test)
+
+full_train <- data.frame(x_train, y_train)
 ```
 
 We now start using different Machine Learning models to predict the election outcomes. To keep some standardisation, we will store the actual results, and the predictions from each of the models we use into the y_train and y_test dataframes created above.
@@ -74,7 +77,7 @@ test$mlr = exp(predict(mlr_model, x_test_mlr))
 
 This model creates a decision boundary between the classes being predicted using the datapoints on the edges of the class clusters. You can read more about SVMs on [wikipedia](https://en.wikipedia.org/wiki/Support_vector_machine).
 ```{r svm, eval = F}
-svm_model = svm(x=x_train, y=y_train)
+svm_model <- fit(actual~., data=full_train, model="svm")
 test$svm = predict(svm_model, x_test)
 ```
 
@@ -227,7 +230,7 @@ dotplot(results)
 As we can see, rf_model_tuned1 performs the best with mtry=p/3. We shall use this model to predict on the test set.
 
 ```{r}
-# Predicting using best model on test set and saving predictions and errors to their respecitive dataframes
+# Predicting using best model on test set and saving predictions and errors to their respective dataframes
 test$rf <- predict(rf_model_tuned1, newdata = test_scaled)
 rf_rmse <- rmse(test_scaled$actual,test$rf)
 ```
@@ -239,9 +242,9 @@ rf_rmse <- rmse(test_scaled$actual,test$rf)
 test_rf <- test
 load("../data/raw_predictions.rda")
 # Add on rf predictions to the current test object which is used below
-test <- test %>% 
-  left_join(test_rf,
-            by = c("fips", "dem_amount", "rep_amount", "popestimate", "netmig", "race_white", "race_black", "race_hispanic", "race_aac", "age_0_to_19_years", "age_20_to_39_years", "age_40_to_59_years", "age_60_to_79_years", "age_80_years_or_older", "financial.services.and.insurance", "gasoline.and.other.energy.goods", "health.care", "other.nondurable.goods", "personal.consumption.expenditures", "food", "household", "nonprofit", "nondurable_goods", "durable_goods", "goods_clothing_footwear", "services", "recreation", "transportation", "raw_gdp", "gdp_change", "unemployment", "dem_poll_mean", "dem_poll_median", "dem_poll_sd", "rep_poll_mean", "rep_poll_median", "rep_poll_sd", "consistency_dem", "consistency_rep", "dem_rep_ratio"))
+# test <- test %>% 
+#   left_join(test_rf,
+#             by = c("fips", "dem_amount", "rep_amount", "popestimate", "netmig", "race_white", "race_black", "race_hispanic", "race_aac", "age_0_to_19_years", "age_20_to_39_years", "age_40_to_59_years", "age_60_to_79_years", "age_80_years_or_older", "financial.services.and.insurance", "gasoline.and.other.energy.goods", "health.care", "other.nondurable.goods", "personal.consumption.expenditures", "food", "household", "nonprofit", "nondurable_goods", "durable_goods", "goods_clothing_footwear", "services", "recreation", "transportation", "raw_gdp", "gdp_change", "unemployment", "dem_poll_mean", "dem_poll_median", "dem_poll_sd", "rep_poll_mean", "rep_poll_median", "rep_poll_sd", "consistency_dem", "consistency_rep", "dem_rep_ratio"))
 
 # Save out raw predictions with random forest added in
 #saveRDS(test, "../data/test_with_rf.rds")
@@ -293,7 +296,7 @@ get_electoral_college <- function(df, pred_input, elect_votes =  elect_tbl, main
 
   final_elect_rollup <- elect_rollup %>%
   left_join(elect_votes %>%
-              select(state, elect_votes),
+              dplyr::select(state, elect_votes),
             by=c("stname" ="state")) %>%
   mutate(
     dem_electoral_votes = state_win*elect_votes,
@@ -318,9 +321,10 @@ get_electoral_college <- function(df, pred_input, elect_votes =  elect_tbl, main
         group_by(state) %>%
         summarize(
           total_dem_rep_ratio_votes = sum(total_dem_rep_ratio_votes),
-          total_pop = sum(total_pop), .groups="drop",
+          total_pop = sum(total_pop),
           dem_electoral_votes = sum(dem_electoral_votes),
           rep_electoral_votes = sum(rep_electoral_votes),
+          .groups="drop"
         ),
       by = c("stname" = "state"),
       suffix = c("", "_mn")
@@ -331,7 +335,7 @@ get_electoral_college <- function(df, pred_input, elect_votes =  elect_tbl, main
       dem_electoral_votes = ifelse(!is.na(dem_electoral_votes_mn), dem_electoral_votes + dem_electoral_votes_mn, dem_electoral_votes),
       rep_electoral_votes = ifelse(!is.na(rep_electoral_votes_mn), rep_electoral_votes + rep_electoral_votes_mn, rep_electoral_votes),
     ) %>%
-    select(names(.)[!str_detect(names(.), "_mn")])
+    dplyr::select(names(.)[!str_detect(names(.), "_mn")])
 
   return(final_elect_rollup)
 
@@ -414,10 +418,10 @@ electoral_results_df %>% kableExtra::kable() %>% kableExtra::kable_styling()
 We want to now look at the metrics for all the models used. Below are the predictions against the actual outcomes, the Root Mean Squared Error (RMSE), and the R^2 for our each model.
 
 
-```{r visualisation, warning=FALSE}
+```{r visualisation, warning=FALSE, echo=TRUE}
 
 test %>% 
-  select(dem_rep_ratio, mlr, svm, xgb, rf) %>% 
+  dplyr::select(dem_rep_ratio, mlr, svm, xgb, rf) %>% 
   gather(pred_type, value, -dem_rep_ratio) %>% 
   ggplot(aes(x = dem_rep_ratio, y = value, color = pred_type)) +
   geom_point(alpha = 0.6) +
@@ -432,12 +436,14 @@ test %>%
   
 ```  
 
-```{r rmse}
+Root Mean Squared Error of each Model:
+
+```{r rmse, echo=TRUE}
 # Create a data frame of all root MSEs
 rmse_df <- data.frame(
   Models = c("Multiple Linear Regression", "Support Vector Machine", "XGBoost", "Random Forest"),
   `Root MSE` = c(sqrt(mean(mlr_model$residuals^2)), 
-           sqrt(mean(svm_model$residuals^2)),
+           sqrt(mean((test$dem_rep_ratio-test$svm)^2)),
            rmse(test$dem_rep_ratio,predict(xgb_model, x_test, missing = NaN)),
            rf_rmse)
 ) 
@@ -446,7 +452,9 @@ rmse_df %>% kableExtra::kable() %>% kableExtra::kable_styling()
 #save(rmse_df, file = "../results/rmse_df.rda")
 ```
 
-```{r r_squared}
+R-Squared for each Model:
+
+```{r r_squared, echo=TRUE}
 # Create a data frame of all R^2
 r2 <- data.frame(
   Models = c("Multiple Linear Regression", "Support Vector Machine", "XGBoost","Random Forest"),
@@ -461,20 +469,32 @@ r2 %>% kableExtra::kable() %>% kableExtra::kable_styling()
 #save(r2, file = "../results/r2.rda")
 ```
 
-The top 10 most important features in the xgboost model:
+The top 10 most important features in the machine learning models:
 
-```{r xgboost_feat_imp, warning=FALSE}
-head(xgb.importance(feature_names = NULL, 
-                    model = xgb_model, data = x_train),10) %>%
-  kableExtra::kable() %>% kableExtra::kable_styling()
+```{r xgboost_feat_imp, warning=FALSE, echo=TRUE}
+xgb_importance_df <- head(xgb.importance(feature_names = NULL, 
+                    model = xgb_model, data = x_train),10)
+xgb_importance_df %>%  kableExtra::kable() %>% kableExtra::kable_styling()
 ```
 
 
-
-```{r}
+```{r random_forest_imp, warning=FALSE, echo=TRUE}
 rf_importance <- varImp(rf_model_tuned1, scale = FALSE)
 df_importance <- as.data.frame(rf_importance$importance) %>%
                 arrange(desc(Overall))
 df_importance_10_rf <- head(df_importance, 10)
+df_importance_10_rf <- tibble::rownames_to_column(df_importance_10_rf, "Feature")
+df_importance_10_rf %>% kableExtra::kable() %>% kableExtra::kable_styling()
+```
+
+```{r support_vector_machine, warning=FALSE, echo=TRUE}
+svm_importance <- Importance(svm_model, data=full_train)
+svm_importance_df <- data.frame(Feature=names(full_train)[1:length(names(full_train))-1],
+                                Importance=svm_importance$imp[1:length(svm_importance$imp)-1]) %>%
+  arrange(desc(Importance))
+svm_importance_df <- head(svm_importance_df,10)
+svm_importance_df %>%  kableExtra::kable() %>% kableExtra::kable_styling()
+
+#save(xgb_importance_df, df_importance_10_rf, svm_importance_df, file = "../results/feature_importance.rda")
 ```
 
