@@ -1,0 +1,44 @@
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Field name | Description  
+--- | ---  
+fips | Combined state and county FIPS codes
+dem_amount | Amount raised by Democrat candidate
+rep_amount | Amount raised by Republican candidate
+popestimate | resident total population estimate in year
+netmig | Net migration in year   
+race_white | White alone population (normalized using popestimate)
+race_black | Black or African American alone population (normalized using popestimate)
+race_hispanic | Hispanic population (normalized using popestimate)
+race_aac | Asian alone or in combination population (normalized using popestimate)
+age_x_to_y_years | Estimated population in x to y age group (normalized using popestimate)  
+financial.services.and.insurance | Consumer Spending (Financial Services and Insurance)
+gasoline.and.other.energy.goods | Consumer Spending (Gasoline and other Energy Goods)
+health.care | Consumer Spending (Health Care)
+other.nondurable.goods | Consumer Spending (Other Nondurable Goods)
+personal.consumption.expenditures | Consumer Spending (Personal Consumption Expenditures)
+food | Consumer Spending (Food)
+household | Consumer Spending (Household)
+nonprofit | Consumer Spending (Non Profit)
+nondurable_goods | Consumer Spending (Nondurable Goods)
+durable_goods | Consumer Spending (Durable Goods)
+goods_clothing_footwear | Consumer Spending (Goods, Clothing, Footwear)
+services | Consumer Spending (Services)
+recreation | Consumer Spending (Recreation)
+transportation | Consumer Spending (Transportation)
+raw_gdp | GDP per county
+gdp_change | GDP change per county
+unemployment | Unemployment by county
+dem_poll_mean | Percentage polled for Democrat candidate; mean (by state)
+dem_poll_median | Percentage polled for Democrat candidate; median (by state)
+dem_poll_sd | Percentage polled for Democrat candidate; standard deviation (by state)
+rep_poll_mean | Percentage polled for Republican candidate; mean (by state)
+rep_poll_median | Percentage polled for Republican candidate; median (by state)
+rep_poll_sd | Percentage polled for Republican candidate; standard deviation (by state)
+consistency_dem | Ratio of percentage voted for Democrat candidate in current election to percentage who voted for Democrat candidate in previous election
+consistency_rep | Ratio of percentage voted for Republican candidate in current election to percentage who voted for Republican candidate in previous election
+dem_rep_ratio | Ratio of percentage voted for Democrat candidate in current election to percentage who voted for Republican candidate in current election **(response variable)**

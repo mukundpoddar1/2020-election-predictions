@@ -51,7 +51,7 @@ An attempt to predict the 2020 US Presidential Elections
 
     * Cleaned file: _president_polls2020.csv_
     * Source: https://projects.fivethirtyeight.com/polls/
-    * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/cleaning_scripts/polling_2020.R)  
+t44    * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/cleaning_scripts/polling_2020.R)  
 
 **Electoral College**
 1. Electoral College vote breakout by state
