@@ -1,5 +1,5 @@
 ---
-title: 'Fate of the Unites States: Can We Predict the US Election?'
+title: 'Fate of the United States: Can We Predict the US Election?'
 author: "Nellie Ponarul, Ben Shea, Mukund Poddar, Saul Holding"
 output: 
   html_document:
@@ -153,11 +153,28 @@ p1 <- ggplot(dataset_2016, aes_string(varname))+
     theme_bw() +
     theme(axis.text.x = element_text(angle = 90, hjust = 1))
 p1
-```  
+```      
 
+Since we are looking at the response variable of ratio,  a count greater than one implies a county that voted predominantly for Hillary Clinton, while a count that is less than one is a county that voted predominantly Trump. As we can see here and as expected, Trump wins the majority of the counties.  
 
-```{r}
-# Corrplot
+##### 2016 Correlation Plot  
+
+```{r, echo = F, warning = F, message = F}
+# Corrplot 2016
+corr_values = c("dem_rep_ratio", "dem_poll_mean", "dem_poll_median", "rep_poll_mean", "rep_poll_median", "dem_amount", "rep_amount", "raw_gdp", "race_white")
+
+corrplot(cor(select(dataset_2016,contains(corr_values)),
+                 use = "pairwise.complete.obs"),method="number",mar=c(0,0,2,0),col=col4(10),number.cex=0.70)
+```    
+
+##### 2020 Correlation Plot  
+
+```{r, echo = F, warning = F, message = F}
+# Corrplot 2016
+corr_values = c("dem_rep_ratio", "dem_poll_mean", "dem_poll_median", "rep_poll_mean", "rep_poll_median", "dem_amount", "rep_amount", "raw_gdp", "race_white")
+
+corrplot(cor(select(dataset_2020,contains(corr_values)),
+                 use = "pairwise.complete.obs"),method="number",mar=c(0,0,2,0),col=col4(10),number.cex=0.70)
 ```  
 
 None of the covariates had a correlation higher than about 0.5 with our outcome variable (`dem_rep_ratio`), but a lot of the covariates had very strong associations to the polls and funding. It could be grounds to throw out either the mean or median poll results since they more or less would be providing the same information. We leave the decision to include or not weigh these variables strongly to our machine learning models and regression selection procedures.  
@@ -179,7 +196,7 @@ Finally, we decided to take the ratio of these percentages as our outcome variab
 
 ### Final Analysis  
 
-For our final analysis, we created four [prediction models](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/ml_models.Rmd) which we trained on 2016 data and ran on the 2020 data in order to predict the 2020 election results. We also created two Shiny apps, one to create all of our exploratory visualizations and one to compare our prediction results to the actual results.         
+For our final analysis, we created four [prediction models](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/ml_models.Rmd) which we trained on 2016 data and ran on the 2020 data in order to predict the 2020 election results. We also created two Shiny apps, one to create all of our [exploratory visualizations](https://github.com/mukundpoddar1/2020-election-predictions/tree/main/EDA) and one to evaluate our [predicted results](https://github.com/mukundpoddar1/2020-election-predictions/commit/107db9ebe2d2fef260de8a168aa94595b588c230).         
 
 For our predictions, we built multiple linear regression, Random Forest, XGboost and Support Vector Machine models. We chose these models because we wanted to try out prediction methods in order to determine which model created the best predictions, and whether or not any of the machine learning models performed better than the multiple linear regression model.   
 
@@ -188,7 +205,7 @@ We built the multiple linear regression model by modeling the log of the ratio o
 Support Vector Machine does not seem to perform too well on the dataset (a different kernel might work better). It predicts an electoral college outcome of 345 voted for the democratic party, and 193 for the Republican party. It’s RMSE is 0.59 and its $R^2$ is 0.47 which is not too good. However, visually it seems to match the county level actual predictions very closely. We believe a significant amount of the errors are concentrated in the counties of Utah that it predicted heavily democratic, and some areas of the Northeast that it predicted Republican.  
 
 After hyperparameter tuning and evaluating the model based on minimizing the root MSE, the XGBoost model was the closest to predicting the actual results of the election (that is, the Electoral College votes) with 309 electoral college votes for Biden, and 229 votes for Trump. The root MSE was the third lowest at 0.47, and had the second highest $R^2$ at 0.65. The top features that were factored in the model were: The amount of money fundraised for the Democrats, percent of the population that is white, and the average poll ratings for Democrats.  
-
+s
 The tuned Random Forest model seems to perform well but not uniformly. The model has the best $R^2$ (0.75) out of all the models and the second lowest root mean squared error (0.41) , which indicates that the model predicts the counties relatively well. However, the Random Forest heavily favors Democrats as the predictions point towards a 370 to 168 electoral college for Biden. The most important features of the model are   
 
 For future analysis, we would include more information related to voter registration, incorporate results and polls from the Senate and House elections to better inform our predictions, and include Presidential election results prior to 2016 to have more data to train our models. In addition to this, future attempts should gather data from multiple elections as this would allow the models to learn different economic, political, and socioeconomic climates, making the model much more robust. We would also like to do a deeper dive on how COVID-19 affected the 2020 election results; but as the pandemic only extends back to the end of 2019, we were unable to train our model with these trends and prior presidential election data.  
