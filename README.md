@@ -1,17 +1,13 @@
-# 2020-election-predictions
-An attempt to predict the 2020 US Presidential Elections  
+# The Fate of the United States - Can We Predict the 2020 Election?  
+Drawing inspiration from Nate Silver’s FiveThirtyEight election predictions, we want to investigate how data science can give us insights on the outcome of one of the most watched and polarizing presidential elections in the world. By performing exploratory data analysis and building various machine learning models and a multiple linear regression model to predict the outcome of the election, we hope to identify what factors drive the current American political climate.  
 
 ## Authors:  
-
-* Ben Shea
-* Mukund Poddar
-* Nellie Ponarul
-* Saul Holding
+Ben Shea, Mukund Poddar, Nellie Ponarul and Saul Holding
 
 ## Contents
 1. [Raw Data Sources](#sources)
 2. [Merged Data](#merge)
-3. [Final Analysis](#final)
+3. [Final Analyses](#final)
 
 
 ## Raw Data Sources:  <a name = "sources">
@@ -39,6 +35,13 @@ An attempt to predict the 2020 US Presidential Elections
       * U.S. Census Bureau, Population Division: Annual County Resident Population Estimates by Age, Sex, Race, and Hispanic Origin: April 1, 2010 to July 1, 2019
         * https://www2.census.gov/programs-surveys/popest/datasets/2010-2019/counties/
     * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/cleaning_scripts/census_clean.R)
+ 
+ 2. State to Geographic Region crosswalk, allowed us to create visualizations of states and highlight their region (Northwest, Midwest, etc.). We did not clean this file separately, but sourced it directly into our Shiny apps and final Rmd file.  
+ 
+    * Source: 
+        * U.S. Census Bureau
+            * https://www.census.gov/geographies/reference-files/2017/demo/popest/2017-fips.html
+        
   
 **Polling Data** 
 1. Polling data from 2016 polls. Contains raw and adjusted polling data.  
@@ -51,7 +54,7 @@ An attempt to predict the 2020 US Presidential Elections
 
     * Cleaned file: _president_polls2020.csv_
     * Source: https://projects.fivethirtyeight.com/polls/
-    * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/cleaning_scripts/polling_2020.R)  
+t44    * [Data cleaning script](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/cleaning_scripts/polling_2020.R)  
 
 **Electoral College**
 1. Electoral College vote breakout by state
@@ -136,6 +139,6 @@ dem_rep_ratio | Ratio of percentage voted for Democrat candidate in current elec
 
 ## Final Analysis: <a name = "final">    
 We created predictions of the 2020 election outcome by predicting the ratio of percent democrat votes to percent republican votes for each county and using these to calculated the electoral college returns.  
-
-  * [Modeling Analysis](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/ml_models.Rmd): Here we perform all of our modeling analysis
-  * [Exploratory Analysis and Maps](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/ml_models.Rmd): Here we have all of our exploratoratory data analyses and mapped visualizations of our predictions.
+  * [Exploratory Data Analysis](https://github.com/mukundpoddar1/2020-election-predictions/tree/main/EDA): We created a Shiny app to create exploratory vizualizations of our data.  
+  * [Map our Results](https://github.com/mukundpoddar1/2020-election-predictions/tree/main/results): We created a Shiny app to map the results of our four prediction models and compare them against the actual outcome of the 2020 U.S. presidential election.
+  * [Modeling Analysis](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/scripts/ml_models.Rmd): Here we perform all of our modeling analysis and detail how each of our models performed.
