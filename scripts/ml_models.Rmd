@@ -470,3 +470,11 @@ head(xgb.importance(feature_names = NULL,
 ```
 
 
+
+```{r}
+rf_importance <- varImp(rf_model_tuned1, scale = FALSE)
+df_importance <- as.data.frame(rf_importance$importance) %>%
+                arrange(desc(Overall))
+df_importance_10_rf <- head(df_importance, 10)
+```
+
