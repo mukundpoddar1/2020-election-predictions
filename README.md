@@ -5,9 +5,13 @@ Drawing inspiration from Nate Silver’s FiveThirtyEight election predictions, w
 Ben Shea, Mukund Poddar, Nellie Ponarul and Saul Holding
 
 ## Contents
+1. [Final Writeup (Rmd)](#final_writeup)
 1. [Raw Data Sources](#sources)
 2. [Merged Data](#merge)
-3. [Final Analyses](#final)
+3. [Analyses](#analyses)  
+
+## Final Write-up: <a name = "final_writeup">  
+Please find a full write-up of our project in these [Rmd](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/final.Rmd) and [HTML](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/final.html) files.
 
 
 ## Raw Data Sources:  <a name = "sources">
@@ -137,7 +141,7 @@ consistency_dem | Ratio of percentage voted for Democrat candidate in current el
 consistency_rep | Ratio of percentage voted for Republican candidate in current election to percentage who voted for Republican candidate in previous election
 dem_rep_ratio | Ratio of percentage voted for Democrat candidate in current election to percentage who voted for Republican candidate in current election **(response variable)**
 
-## Final Analysis: <a name = "final">    
+## Analyses: <a name = "analyses">    
 We created predictions of the 2020 election outcome by predicting the ratio of percent democrat votes to percent republican votes for each county and using these to calculated the electoral college returns.  
   * [Exploratory Data Analysis](https://github.com/mukundpoddar1/2020-election-predictions/tree/main/EDA): We created a Shiny app to create exploratory vizualizations of our data.  
   * [Map our Results](https://github.com/mukundpoddar1/2020-election-predictions/tree/main/results): We created a Shiny app to map the results of our four prediction models and compare them against the actual outcome of the 2020 U.S. presidential election.
