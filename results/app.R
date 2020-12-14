@@ -315,7 +315,7 @@ server <- function(input, output) {
     })
     
     output$xgb_importance <- renderTable({
-        xgb_importance_df
+        xgb_importance_df %>% dplyr::select(Feature, Gain)
     })
     
     output$rf_importance <- renderTable({
