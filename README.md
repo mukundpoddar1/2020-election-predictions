@@ -11,8 +11,7 @@ Ben Shea, Mukund Poddar, Nellie Ponarul and Saul Holding
 3. [Analyses](#analyses)  
 
 ## Final Write-up: <a name = "final_writeup">  
-Please find a full write-up of our project in these [Rmd](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/final.Rmd) and [HTML](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/final.html) files.
-
+Please find a full write-up of our project in these [Rmd](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/final.Rmd) and [HTML](https://github.com/mukundpoddar1/2020-election-predictions/blob/main/final.html) files, and on our [website](https://sites.google.com/view/2020-us-election/data-analysis).
 
 ## Raw Data Sources:  <a name = "sources">
 
